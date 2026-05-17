@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { isTextUIPart, isToolUIPart, getToolName } from 'ai'
+import { isFileUIPart, isTextUIPart, isToolUIPart, getToolName } from 'ai'
 import { CollapsibleContent, CollapsibleRoot, CollapsibleTrigger } from 'reka-ui'
+import { computed } from 'vue'
 import { Markdown } from 'vue-stream-markdown'
 import { vTestId } from '@open-pencil/vue'
 import 'vue-stream-markdown/index.css'
@@ -8,6 +9,18 @@ import 'vue-stream-markdown/index.css'
 import type { UIDataTypes, UIMessage, UIMessagePart, UITools } from 'ai'
 
 const { message } = defineProps<{ message: UIMessage }>()
+
+/** Image attachments on a (user) message — rendered as thumbnails. */
+const imageParts = computed(() =>
+  message.parts.filter(isFileUIPart).filter((p) => p.mediaType.startsWith('image/'))
+)
+
+const userText = computed(() =>
+  message.parts
+    .filter(isTextUIPart)
+    .map((p) => p.text)
+    .join('')
+)
 
 type ToolPart = Extract<UIMessagePart<UIDataTypes, UITools>, { toolCallId: string }>
 
@@ -112,18 +125,29 @@ function partKey(part: UIMessagePart<UIDataTypes, UITools>, index: number): stri
       </template>
 
       <!-- User message -->
-      <div
-        v-else-if="message.role === 'user'"
-        data-test-id="chat-text-bubble"
-        class="rounded-xl rounded-br-md bg-accent px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap text-white"
-      >
-        {{
-          message.parts
-            .filter(isTextUIPart)
-            .map((p) => p.text)
-            .join('')
-        }}
-      </div>
+      <template v-else-if="message.role === 'user'">
+        <!-- Image attachments (mascot / logo / design reference) -->
+        <div
+          v-if="imageParts.length > 0"
+          data-test-id="chat-message-attachments"
+          class="flex flex-wrap justify-end gap-1.5"
+        >
+          <img
+            v-for="(part, i) in imageParts"
+            :key="`file-${i}`"
+            :src="part.url"
+            :alt="part.filename ?? 'attachment'"
+            class="size-16 rounded-lg border border-border object-cover"
+          />
+        </div>
+        <div
+          v-if="userText"
+          data-test-id="chat-text-bubble"
+          class="rounded-xl rounded-br-md bg-accent px-3 py-2 text-xs leading-relaxed whitespace-pre-wrap text-white"
+        >
+          {{ userText }}
+        </div>
+      </template>
     </div>
   </div>
 </template>
