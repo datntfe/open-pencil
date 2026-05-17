@@ -15,7 +15,9 @@ const { panels } = useI18n()
 
 <template>
   <div data-test-id="page-section" :class="sectionCls.wrapper">
-    <label class="mb-1.5 block text-[11px] text-muted">{{ panels.page ?? 'Page' }}</label>
+    <label class="mb-1.5 block text-xs font-semibold text-surface">{{
+      panels.page ?? 'Page'
+    }}</label>
     <ColorInput :color="pageColor" editable @update="editor.setPageColor($event)" />
   </div>
 </template>

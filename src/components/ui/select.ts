@@ -13,8 +13,8 @@ const content = tv({
       lg: 'rounded-lg'
     },
     elevation: {
-      lg: 'shadow-lg',
-      xl: 'shadow-xl'
+      lg: 'shadow-floating',
+      xl: 'shadow-floating'
     },
     padding: {
       none: '',

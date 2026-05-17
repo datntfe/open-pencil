@@ -132,7 +132,7 @@ onScopeDispose(() => {
     <div class="flex items-center justify-between">
       <label :class="sectionCls.label">{{ panels.export }}</label>
       <button data-test-id="export-section-add" :class="useIconButtonUI().base" @click="addSetting">
-        +
+        <icon-lucide-plus class="size-3.5" />
       </button>
     </div>
 
@@ -155,14 +155,14 @@ onScopeDispose(() => {
         @update:model-value="updateFormat(i, $event as ExportFormatId)"
       />
       <button :class="useIconButtonUI({ ui: { base: 'shrink-0' } }).base" @click="removeSetting(i)">
-        −
+        <icon-lucide-minus class="size-3.5" />
       </button>
     </div>
 
     <button
       v-if="activeSettings.length > 0"
       data-test-id="export-button"
-      class="mt-1.5 w-full cursor-pointer truncate rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:cursor-default disabled:opacity-50"
+      class="mt-1.5 w-full cursor-pointer truncate rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-accent-hover disabled:cursor-default disabled:opacity-50"
       :disabled="exporting"
       @click="doExport"
     >

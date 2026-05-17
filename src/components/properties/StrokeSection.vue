@@ -96,7 +96,7 @@ function setGap(stroke: Stroke | undefined, patch: StrokePatch, value: number) {
           :class="useIconButtonUI().base"
           @click="actions.add(strokeCtx.defaultStroke)"
         >
-          +
+          <icon-lucide-plus class="size-3.5" />
         </button>
       </div>
 

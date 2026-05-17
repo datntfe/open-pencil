@@ -5,6 +5,8 @@ import type { EditorState } from '#core/editor/types'
 import { computeDescendantVisualBounds } from '#core/geometry'
 import type { SceneGraph } from '#core/scene-graph'
 
+import { drawCanvasDotGrid } from './dot-grid'
+
 export function renderSceneToCanvas(
   r: SkiaRenderer,
   canvas: Canvas,
@@ -145,6 +147,7 @@ export function render(
     canvas.clear(r.ck.Color4f(0, 0, 0, 0))
   } else {
     canvas.clear(r.ck.Color4f(r.pageColor.r, r.pageColor.g, r.pageColor.b, 1))
+    drawCanvasDotGrid(r, canvas)
   }
 
   r.worldViewport = {

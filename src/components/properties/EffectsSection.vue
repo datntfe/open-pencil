@@ -29,7 +29,7 @@ const sectionCls = useSectionUI()
           :class="useIconButtonUI().base"
           @click="actions.add(effectsCtx.createDefaultEffect())"
         >
-          +
+          <icon-lucide-plus class="size-3.5" />
         </button>
       </div>
 
@@ -81,7 +81,7 @@ const sectionCls = useSectionUI()
             :class="useIconButtonUI().base"
             @click="effectsCtx.handleRemove(actions.remove, i)"
           >
-            −
+            <icon-lucide-minus class="size-3.5" />
           </button>
         </div>
 

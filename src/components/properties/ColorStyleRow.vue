@@ -109,7 +109,7 @@ const { panels, dialogs } = useI18n()
     </button>
 
     <button :class="useIconButtonUI({ ui: { base: 'shrink-0' } }).base" @click="emit('remove')">
-      −
+      <icon-lucide-minus class="size-3.5" />
     </button>
   </div>
 </template>

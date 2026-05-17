@@ -2,11 +2,11 @@ import { twMerge } from 'tailwind-merge'
 import { tv } from 'tailwind-variants'
 
 const button = tv({
-  base: 'inline-flex items-center justify-center transition-colors select-none',
+  base: 'inline-flex items-center justify-center transition-colors select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50',
   variants: {
     tone: {
       ghost: 'bg-transparent text-muted hover:bg-hover hover:text-surface',
-      accent: 'bg-accent text-white hover:bg-accent/90',
+      accent: 'bg-accent text-white hover:bg-accent-hover',
       panel: 'bg-panel/70 text-surface backdrop-blur-xl',
       panelAccent: 'border-accent/20 bg-panel/70 text-accent backdrop-blur-xl'
     },

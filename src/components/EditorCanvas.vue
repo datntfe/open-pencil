@@ -141,7 +141,7 @@ const cursor = computed(() => toolCursor(store.state.activeTool, cursorOverride.
               :side-offset="AUTO_LAYOUT_PADDING_EDITOR_OFFSET_Y"
               :align-offset="AUTO_LAYOUT_PADDING_EDITOR_OFFSET_X"
               :collision-padding="8"
-              class="z-50 w-20 rounded-md bg-panel p-1 shadow-lg"
+              class="z-50 w-20 rounded-md bg-panel p-1 shadow-floating"
               data-test-id="auto-layout-padding-editor"
               @keydown.escape.prevent="cancelAutoLayoutPaddingEdit"
               @open-auto-focus.prevent

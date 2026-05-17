@@ -112,6 +112,7 @@ export class SkiaRenderer {
   _culledCount = 0
   _flashes: Array<{ nodeId: string; startTime: number }> = []
   _flashPaint: Paint | null = null
+  _dotGridPaint: Paint | null = null
   _aiActiveNodes: Set<string> = new Set()
   _aiDoneFlashes: Array<{ nodeId: string; startTime: number }> = []
 

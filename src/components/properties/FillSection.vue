@@ -46,7 +46,7 @@ function updateFill(
           :class="useIconButtonUI().base"
           @click="actions.add({ ...fillCtx.defaultFill })"
         >
-          +
+          <icon-lucide-plus class="size-3.5" />
         </button>
       </div>
       <p v-if="isMixed" class="text-[11px] text-muted">{{ panels.mixedFillsHelp }}</p>

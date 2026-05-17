@@ -23,6 +23,13 @@ export default defineConfig(async ({ command }) => ({
   define: {
     __OPENPENCIL_LOCAL_AUTOMATION_TOKEN__: JSON.stringify(localAutomationToken(command))
   },
+  optimizeDeps: {
+    // Pre-bundle the streaming markdown renderer (and its lazily imported node
+    // components) up front so it is part of the first optimization pass and is
+    // less likely to trigger a mid-session dependency re-optimization that
+    // invalidates its chunks.
+    include: ['vue-stream-markdown']
+  },
   plugins: [
     rawMarkdownPlugin(),
     copyCanvasKitAssetsPlugin(),

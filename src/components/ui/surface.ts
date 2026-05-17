@@ -5,10 +5,10 @@ const surface = tv({
   base: 'border border-border bg-panel',
   variants: {
     elevation: {
-      md: 'shadow-md',
-      lg: 'shadow-lg',
-      xl: 'shadow-xl',
-      overlay: 'shadow-[0_8px_30px_rgb(0_0_0/0.4)]'
+      md: 'shadow-panel',
+      lg: 'shadow-panel',
+      xl: 'shadow-floating',
+      overlay: 'shadow-floating'
     },
     radius: {
       md: 'rounded-md',

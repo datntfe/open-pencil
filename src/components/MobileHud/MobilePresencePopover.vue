@@ -24,7 +24,7 @@ const hud = useMobileHudContext()
         :side-offset="8"
         side="bottom"
         align="center"
-        class="z-50 w-56 rounded-xl border border-border bg-panel p-3 shadow-xl"
+        class="z-50 w-56 rounded-xl border border-border bg-panel p-3 shadow-floating"
       >
         <div class="mb-2 text-[11px] tracking-wider text-muted uppercase">In this room</div>
         <div class="flex flex-col gap-2">

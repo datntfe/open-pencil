@@ -32,7 +32,10 @@ const emit = defineEmits<{ update: [color: Color] }>()
     @update="emit('update', $event)"
   >
     <template #default="{ editable: isEditable, hex, actions, okhcl: okhclControls }">
-      <div v-bind="attrs" class="flex items-center gap-1.5">
+      <div
+        v-bind="attrs"
+        class="flex items-center gap-1.5 rounded-md border border-border bg-panel-muted px-1.5 py-1"
+      >
         <ColorPicker :color="color" :okhcl="okhclControls" @update="actions.updateColor($event)" />
         <input
           v-if="isEditable"

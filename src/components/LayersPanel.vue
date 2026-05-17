@@ -20,25 +20,33 @@ const activePanel = ref<'file' | 'assets'>('file')
     style="contain: paint layout style"
   >
     <AppMenu />
-    <div class="flex shrink-0 gap-1 border-b border-border px-2 py-1.5">
-      <button
-        data-test-id="left-panel-layers-tab"
-        class="flex-1 rounded px-2 py-1 text-xs transition-colors"
-        :class="activePanel === 'file' ? 'bg-hover text-surface' : 'text-muted hover:text-surface'"
-        @click="activePanel = 'file'"
-      >
-        {{ menu.file }}
-      </button>
-      <button
-        data-test-id="left-panel-assets-tab"
-        class="flex-1 rounded px-2 py-1 text-xs transition-colors"
-        :class="
-          activePanel === 'assets' ? 'bg-hover text-surface' : 'text-muted hover:text-surface'
-        "
-        @click="activePanel = 'assets'"
-      >
-        {{ panels.assets }}
-      </button>
+    <div class="flex shrink-0 border-b border-border px-2 py-1.5">
+      <div class="flex gap-0.5 rounded-lg bg-panel-muted p-0.5">
+        <button
+          data-test-id="left-panel-layers-tab"
+          class="rounded-md border px-2.5 py-1 text-xs font-medium transition-colors"
+          :class="
+            activePanel === 'file'
+              ? 'border-border bg-panel text-surface'
+              : 'border-transparent text-muted hover:text-surface'
+          "
+          @click="activePanel = 'file'"
+        >
+          {{ menu.file }}
+        </button>
+        <button
+          data-test-id="left-panel-assets-tab"
+          class="rounded-md border px-2.5 py-1 text-xs font-medium transition-colors"
+          :class="
+            activePanel === 'assets'
+              ? 'border-border bg-panel text-surface'
+              : 'border-transparent text-muted hover:text-surface'
+          "
+          @click="activePanel = 'assets'"
+        >
+          {{ panels.assets }}
+        </button>
+      </div>
     </div>
     <AssetsPanel v-if="activePanel === 'assets'" />
     <SplitterGroup

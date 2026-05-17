@@ -8,8 +8,8 @@ import { copyChatLog } from '@/app/ai/debug'
 import { clearToolLogEntries, didHitStepLimit } from '@/app/ai/tools'
 import { activeTab } from '@/app/tabs'
 import AcpPermissionDialog from '@/components/chat/AcpPermissionDialog.vue'
-import ChatInput from '@/components/chat/ChatInput.vue'
 import ChatMessage from '@/components/chat/ChatMessage.vue'
+import ChatProviderBar from '@/components/chat/ChatProviderBar.vue'
 import ProviderSetup from '@/components/chat/ProviderSetup.vue'
 import { useAIChat } from '@/app/ai/chat/use'
 import { toast } from '@/app/shell/ui'
@@ -91,10 +91,6 @@ async function handleSubmit(text: string) {
     console.error('Chat error:', e)
     toast.error(e instanceof Error ? e.message : String(e))
   })
-}
-
-function handleStop() {
-  chat.value?.stop()
 }
 
 async function handleCopyDebug() {
@@ -212,7 +208,7 @@ function handleClearChat() {
         </button>
       </div>
 
-      <ChatInput :status="status" @submit="handleSubmit" @stop="handleStop" />
+      <ChatProviderBar />
 
       <AcpPermissionDialog />
     </template>
