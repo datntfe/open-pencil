@@ -11,6 +11,7 @@ import {
 import { fillLabel } from '@/components/properties/fill-label'
 import { createFillOkhclAdapter } from '@/components/properties/fill-okhcl'
 import { useIconButtonUI } from '@/components/ui/icon-button'
+import { useInputUI } from '@/components/ui/input'
 import { useSectionUI } from '@/components/ui/section'
 
 import type { Fill, SceneNode } from '@open-pencil/core/scene-graph'
@@ -94,7 +95,7 @@ function updateFillHex(
         <input
           v-if="fill.type === 'SOLID' && !(activeNode && fillCtx.getBoundVariable(activeNode.id, i))"
           data-test-id="fill-hex-input"
-          class="min-w-0 flex-1 border-none bg-transparent font-mono text-xs text-surface uppercase outline-none"
+          :class="useInputUI({ ui: { base: 'min-w-0 flex-1 font-mono uppercase' } }).base"
           :value="fillLabel(fill)"
           maxlength="6"
           spellcheck="false"
