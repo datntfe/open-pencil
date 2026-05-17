@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { nextTick } from 'vue'
-import { templateRef, unrefElement } from '@vueuse/core'
 import {
   ComboboxAnchor,
   ComboboxContent,
@@ -32,15 +30,8 @@ const { listFonts, localFontAccess, ui, emptySearchText, emptyFontsText, emptyFo
 const modelValue = defineModel<string>({ required: true })
 const emit = defineEmits<{ select: [family: string] }>()
 
-const contentRef = templateRef<HTMLElement>('contentRef')
-
-function focusSearchInput() {
-  nextTick(() => {
-    const content = unrefElement(contentRef)
-    if (!(content instanceof HTMLElement)) return
-    content.querySelector<HTMLInputElement>('input')?.focus()
-  })
-}
+/** Keep the search box empty on open — never echo the selected family into it. */
+const emptyDisplayValue = () => ''
 
 const { searchTerm, open, filteredGroups, fontCount, select } = useFontPicker({
   modelValue,
@@ -78,12 +69,12 @@ const { searchTerm, open, filteredGroups, fontCount, select } = useFontPicker({
         position="popper"
         :class="ui?.content"
         @open-auto-focus.prevent
-        ref="contentRef"
-        @vue:mounted="focusSearchInput"
       >
         <slot name="search" :search-term="searchTerm">
           <ComboboxInput
             v-model="searchTerm"
+            auto-focus
+            :display-value="emptyDisplayValue"
             :class="ui?.search"
             placeholder="Search fonts…"
             autocomplete="off"
