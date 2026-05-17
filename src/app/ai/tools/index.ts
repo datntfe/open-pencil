@@ -5,14 +5,14 @@ import * as v from 'valibot'
 import { computeAllLayouts } from '@open-pencil/core/layout'
 import type { SceneNode } from '@open-pencil/core/scene-graph'
 import { fontManager } from '@open-pencil/core/text'
-import { CORE_TOOLS, toolsToAI } from '@open-pencil/core/tools'
+import { CORE_TOOLS, exportImage, toolsToAI } from '@open-pencil/core/tools'
 import type { StepBudget, ToolLogEntry } from '@open-pencil/core/tools'
 
 import { makeFigmaFromStore } from '@/app/automation/bridge/figma-factory'
 import { getActiveEditorStore } from '@/app/editor/active-store'
 import type { EditorStore } from '@/app/editor/active-store'
 
-export const MAX_AGENT_STEPS = 50
+export const MAX_AGENT_STEPS = 80
 
 export interface StepUsage {
   inputTokens: number
@@ -87,7 +87,9 @@ export function createAITools(store: EditorStore) {
   const runState = getRunState(store)
 
   return toolsToAI(
-    CORE_TOOLS,
+    // export_image lets the agent visually verify the finished design;
+    // the ai-adapter feeds its result back as an image the model can see.
+    [...CORE_TOOLS, exportImage],
     {
       getFigma: () => makeFigmaFromStore(store),
       onBeforeExecute: (def) => {
@@ -101,7 +103,13 @@ export function createAITools(store: EditorStore) {
           const pageNode = store.graph.getNode(pageId)
           if (pageNode) {
             const fontKeys = fontManager.collectFontKeys(store.graph, pageNode.childIds)
-            const missing = fontKeys.filter(([family]) => !fontManager.isLoaded(family))
+            // Filter by exact family+style: the renderer's isNodeFontLoaded gate
+            // requires the specific weight/italic style, not just any style of
+            // the family. A family-level check leaves nodes whose style isn't
+            // loaded with invisible text (the string stays in node.text).
+            const missing = fontKeys.filter(
+              ([family, style]) => !fontManager.isStyleLoaded(family, style)
+            )
             if (missing.length > 0) {
               const results = await Promise.all(
                 missing.map(([family, style]) => fontManager.loadFont(family, style))
