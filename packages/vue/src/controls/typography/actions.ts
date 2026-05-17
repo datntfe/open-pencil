@@ -66,40 +66,13 @@ export function createTypographyActions({
     await options.fontLoader?.load(family, style)
   }
 
-  /**
-   * Picks the nearest weight the family supports, so switching to a font that
-   * lacks the current weight snaps to a real one instead of leaving the node
-   * on a weight no longer offered in the panel.
-   */
-  async function resolveAvailableWeight(family: string, current: number): Promise<number> {
-    const listWeights = options.fontLoader?.listWeights
-    if (!listWeights) return current
-    let available: number[]
-    try {
-      available = await listWeights(family)
-    } catch {
-      return current
-    }
-    if (available.length === 0 || available.includes(current)) return current
-    return available.reduce((best, w) =>
-      Math.abs(w - current) < Math.abs(best - current) ? w : best
-    )
-  }
-
   async function setFamily(family: string) {
-    // Capture the target node up front: the awaits below may outlast the
-    // current selection, but the font change still belongs to this node.
-    const target = node.value
-    if (!target) return
-    const weight = await resolveAvailableWeight(family, target.fontWeight)
-    await doLoadFont(family, weightToStyle(weight))
-    editor.updateNodeWithUndo(
-      target.id,
-      weight === target.fontWeight
-        ? { fontFamily: family }
-        : { fontFamily: family, fontWeight: weight },
-      'Change font'
-    )
+    if (!node.value) return
+    const { id, fontWeight } = node.value
+    // Apply the family first so the canvas updates immediately; the font then
+    // loads in the background and the text re-renders once it is ready.
+    editor.updateNodeWithUndo(id, { fontFamily: family }, 'Change font')
+    await doLoadFont(family, weightToStyle(fontWeight))
   }
 
   async function setWeight(weight: number) {
