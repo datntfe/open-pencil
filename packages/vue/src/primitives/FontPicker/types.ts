@@ -5,10 +5,11 @@ export interface FontPickerEntry {
   group?: string
 }
 
-/** A rendered row in the picker — either a section header or a selectable font. */
-export type FontPickerRow =
-  | { kind: 'header'; key: string; label: string }
-  | { kind: 'font'; key: string; family: string }
+/** A picker section: a label and its (search-filtered) font families. */
+export interface FontPickerGroup {
+  label: string
+  families: string[]
+}
 
 export interface FontPickerUi {
   trigger?: string

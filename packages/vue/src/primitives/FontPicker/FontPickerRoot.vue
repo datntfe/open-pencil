@@ -4,20 +4,20 @@ import { templateRef, unrefElement } from '@vueuse/core'
 import {
   ComboboxAnchor,
   ComboboxContent,
+  ComboboxGroup,
   ComboboxInput,
   ComboboxItem,
-  ComboboxItemIndicator,
+  ComboboxLabel,
   ComboboxPortal,
   ComboboxRoot,
   ComboboxTrigger,
-  ComboboxVirtualizer,
   ComboboxViewport,
   type AcceptableValue
 } from 'reka-ui'
 
 import { useFontPicker, type FontAccessController } from '#vue/primitives/FontPicker/useFontPicker'
 
-import type { FontPickerEntry, FontPickerRow, FontPickerUi } from '#vue/primitives/FontPicker/types'
+import type { FontPickerEntry, FontPickerUi } from '#vue/primitives/FontPicker/types'
 
 const { listFonts, localFontAccess, ui, emptySearchText, emptyFontsText, emptyFontsHint } =
   defineProps<{
@@ -42,15 +42,13 @@ function focusSearchInput() {
   })
 }
 
-const { searchTerm, open, rows, fontCount, loading, accessState, requestAccess, select } =
+const { searchTerm, open, filteredGroups, fontCount, loading, accessState, requestAccess, select } =
   useFontPicker({
     modelValue,
     listFonts,
     localFontAccess,
     onSelect: (family) => emit('select', family)
   })
-
-const rowText = (row: FontPickerRow) => (row.kind === 'font' ? row.family : '')
 </script>
 
 <template>
@@ -97,48 +95,35 @@ const rowText = (row: FontPickerRow) => (row.kind === 'font' ? row.family : '')
         </slot>
 
         <ComboboxViewport :class="ui?.viewport ?? 'max-h-72 overflow-y-auto'">
-          <ComboboxVirtualizer
-            v-slot="{ option }"
-            :options="rows"
-            :text-content="rowText"
-            :estimate-size="34"
-          >
-            <div
-              v-if="option.kind === 'header'"
+          <ComboboxGroup v-for="group in filteredGroups" :key="group.label">
+            <ComboboxLabel
+              v-if="group.label"
               :class="
                 ui?.header ??
                 'select-none px-2 pt-2 pb-1 text-[10px] font-medium uppercase tracking-wide text-muted'
               "
             >
-              {{ option.label }}
-            </div>
-            <slot
-              v-else
-              name="item"
-              :family="option.family"
-              :selected="option.family === modelValue"
+              {{ group.label }}
+            </ComboboxLabel>
+            <ComboboxItem
+              v-for="family in group.families"
+              :key="family"
+              :value="family"
+              :class="ui?.item"
+              :style="{ fontFamily: `'${family}', sans-serif` }"
             >
-              <ComboboxItem
-                :value="option.family"
-                :class="ui?.item"
-                :style="{ fontFamily: `'${option.family}', sans-serif` }"
-              >
-                <ComboboxItemIndicator>
-                  <slot name="indicator" :selected="option.family === modelValue" />
-                </ComboboxItemIndicator>
-                <span class="truncate">{{ option.family }}</span>
-              </ComboboxItem>
-            </slot>
-          </ComboboxVirtualizer>
+              <slot name="item" :family="family" :selected="family === modelValue">
+                <span class="truncate">{{ family }}</span>
+              </slot>
+            </ComboboxItem>
+          </ComboboxGroup>
 
           <div v-if="fontCount === 0 && searchTerm" :class="ui?.empty">
             {{ emptySearchText ?? 'No fonts found' }}
           </div>
           <div v-else-if="fontCount === 0" :class="ui?.empty">
-            <div>
-              <p>{{ emptyFontsText ?? 'No fonts available.' }}</p>
-              <p v-if="emptyFontsHint" class="mt-1">{{ emptyFontsHint }}</p>
-            </div>
+            <p>{{ emptyFontsText ?? 'No fonts available.' }}</p>
+            <p v-if="emptyFontsHint" class="mt-1">{{ emptyFontsHint }}</p>
           </div>
 
           <button

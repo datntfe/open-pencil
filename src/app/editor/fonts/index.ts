@@ -1,4 +1,5 @@
 import {
+  FONT_CATALOG_BY_FAMILY,
   fontManager,
   styleToWeight,
   type LocalFontAccessState,
@@ -117,6 +118,10 @@ export async function listFonts(): Promise<TauriFontFamily[]> {
  * full weight scale.
  */
 export async function listWeights(family: string): Promise<number[]> {
+  // Catalog fonts declare their weights up front — instant, offline, reliable.
+  const catalogEntry = FONT_CATALOG_BY_FAMILY.get(family)
+  if (catalogEntry) return catalogEntry.weights
+
   configureTauriFontCache()
   if (isTauri()) {
     const fonts = await getTauriFonts()
@@ -124,9 +129,8 @@ export async function listWeights(family: string): Promise<number[]> {
     if (entry && entry.styles.length > 0) {
       return [...new Set(entry.styles.map((style) => styleToWeight(style)))].sort((a, b) => a - b)
     }
-    // Not an installed family (e.g. a curated Google font) — ask the manager.
-    return fontManager.availableWeights(family)
   }
+  // System font or unknown family — derive from local/Google metadata.
   return fontManager.availableWeights(family)
 }
 

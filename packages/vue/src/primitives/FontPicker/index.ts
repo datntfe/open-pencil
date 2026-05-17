@@ -2,5 +2,5 @@ export { default as FontPickerRoot } from '#vue/primitives/FontPicker/FontPicker
 export type {
   FontPickerUi,
   FontPickerEntry,
-  FontPickerRow
+  FontPickerGroup
 } from '#vue/primitives/FontPicker/types'

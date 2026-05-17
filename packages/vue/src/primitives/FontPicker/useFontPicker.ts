@@ -1,7 +1,7 @@
 import { useFilter } from 'reka-ui'
 import { computed, ref, watch } from 'vue'
 
-import type { FontPickerEntry, FontPickerRow } from '#vue/primitives/FontPicker/types'
+import type { FontPickerEntry, FontPickerGroup } from '#vue/primitives/FontPicker/types'
 
 export type FontAccessState = 'unsupported' | 'prompt' | 'granted' | 'denied'
 
@@ -40,28 +40,29 @@ export function useFontPicker(options: UseFontPickerOptions) {
 
   const { contains } = useFilter({ sensitivity: 'base' })
 
-  /** Entries after the search filter. */
-  const matched = computed(() => {
-    if (!searchTerm.value) return entries.value
-    return entries.value.filter((entry) => contains(entry.family, searchTerm.value))
-  })
-
-  /** Rows to render: a section header precedes each new group. */
-  const rows = computed<FontPickerRow[]>(() => {
-    const out: FontPickerRow[] = []
-    let lastGroup: string | undefined
-    for (const entry of matched.value) {
-      if (entry.group && entry.group !== lastGroup) {
-        lastGroup = entry.group
-        out.push({ kind: 'header', key: `h:${entry.group}`, label: entry.group })
+  /** Search-filtered entries grouped into sections, preserving entry order. */
+  const filteredGroups = computed<FontPickerGroup[]>(() => {
+    const term = searchTerm.value.trim()
+    const byLabel = new Map<string, string[]>()
+    const order: string[] = []
+    for (const entry of entries.value) {
+      if (term && !contains(entry.family, term)) continue
+      const label = entry.group ?? ''
+      let families = byLabel.get(label)
+      if (!families) {
+        families = []
+        byLabel.set(label, families)
+        order.push(label)
       }
-      out.push({ kind: 'font', key: `f:${entry.family}`, family: entry.family })
+      families.push(entry.family)
     }
-    return out
+    return order.map((label) => ({ label, families: byLabel.get(label) ?? [] }))
   })
 
   /** Number of fonts (excluding headers) currently shown. */
-  const fontCount = computed(() => matched.value.length)
+  const fontCount = computed(() =>
+    filteredGroups.value.reduce((total, group) => total + group.families.length, 0)
+  )
 
   async function loadEntries() {
     if (loading.value) return
@@ -102,7 +103,7 @@ export function useFontPicker(options: UseFontPickerOptions) {
 
   return {
     entries,
-    rows,
+    filteredGroups,
     fontCount,
     searchTerm,
     open,

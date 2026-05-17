@@ -17,7 +17,12 @@ import {
 } from '@open-pencil/core/text'
 import type { FontCategory, FontSource } from '@open-pencil/core/text'
 
-import { listFamilies, listFonts } from '@/app/editor/fonts'
+import {
+  listFamilies,
+  listFonts,
+  localFontAccessState,
+  requestLocalFontAccess
+} from '@/app/editor/fonts'
 import { isTauri } from '@/app/tauri/env'
 
 export interface FontRegistryItem {
@@ -51,8 +56,14 @@ async function getSystemFamilies(): Promise<string[]> {
       const fonts = await listFonts()
       return fonts.map((f) => f.family)
     }
-    // Browser: listFamilies() = catalog ∪ granted local fonts. Subtract the
-    // catalog to isolate the system-only families.
+    // Browser: once Local Font Access is granted, re-query so system fonts
+    // reappear after a reload without revisiting Font settings. This never
+    // prompts — the permission is already granted.
+    if (localFontAccessState() === 'granted') {
+      await requestLocalFontAccess()
+    }
+    // listFamilies() = catalog ∪ granted local fonts; subtract the catalog to
+    // isolate the system-only families.
     const all = await listFamilies()
     return all.filter((family) => !CATALOG_FAMILY_SET.has(family))
   } catch {

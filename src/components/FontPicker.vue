@@ -16,14 +16,13 @@ const cls = usePopoverUI({
   content: 'w-[var(--reka-combobox-trigger-width)] min-w-56 overflow-hidden p-0'
 })
 const selectCls = useSelectUI({
-  trigger: 'w-full rounded px-2 py-1 text-xs',
-  item: 'w-full gap-2 px-2 py-2 text-sm'
+  trigger: 'w-full rounded px-2 py-1 text-xs'
 })
 
 const ui = computed<FontPickerUi>(() => ({
   trigger: selectCls.trigger,
   content: cls.content,
-  item: selectCls.item,
+  item: 'flex w-full cursor-pointer items-center gap-2 px-2 py-2 text-sm text-surface data-[highlighted]:bg-hover data-[state=checked]:text-accent',
   header: 'select-none px-2 pt-2 pb-1 text-[10px] font-medium uppercase tracking-wide text-muted',
   search:
     'w-full border-b border-border bg-transparent px-2 py-1 text-xs text-surface outline-none placeholder:text-muted',
@@ -66,15 +65,9 @@ const localFontAccess = {
     </template>
 
     <template #item="{ family, selected }">
-      <div
-        data-test-id="font-picker-item"
-        :class="selectCls.item"
-        :style="{ fontFamily: `'${family}', sans-serif` }"
-      >
-        <icon-lucide-check v-if="selected" class="size-3 shrink-0 text-accent" />
-        <span v-else class="size-3 shrink-0" />
-        <span class="truncate">{{ family }}</span>
-      </div>
+      <icon-lucide-check v-if="selected" class="size-3 shrink-0 text-accent" />
+      <span v-else class="size-3 shrink-0" />
+      <span data-test-id="font-picker-item" class="truncate">{{ family }}</span>
     </template>
   </FontPickerRoot>
 </template>

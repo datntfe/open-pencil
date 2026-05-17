@@ -123,7 +123,7 @@ export {
 export type { ColorFieldFormat, OkHCLControls } from '#vue/primitives/ColorPicker'
 export { FillPickerRoot } from '#vue/primitives/FillPicker'
 export { FontPickerRoot } from '#vue/primitives/FontPicker'
-export type { FontPickerUi, FontPickerEntry, FontPickerRow } from '#vue/primitives/FontPicker'
+export type { FontPickerUi, FontPickerEntry, FontPickerGroup } from '#vue/primitives/FontPicker'
 export {
   GradientEditorRoot,
   GradientEditorBar,
