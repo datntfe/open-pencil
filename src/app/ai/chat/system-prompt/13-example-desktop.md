@@ -4,6 +4,14 @@ User prompt: "business media desktop site with real images, 12-col grid, 8 cols 
 
 This is a **desktop media site** (1440px wide, scrollable) — light theme, 12-col grid, card-based layout.
 
+Desktop-focused compositions can carry more information, but they still need one dominant focal area, clear grid logic, generous section gaps, and no tiny equal-weight columns. Use these recipes:
+
+- Hero banner: strong headline area, supporting subtext/CTA, visual or product proof that does not fight the headline.
+- Infographic: modular board with 3-6 sections, consistent cards/icons, obvious scan order.
+- Comparison board: two or three aligned columns, matching row logic, clear difference markers.
+- UI section: realistic product component hierarchy, clean controls, readable labels, restrained decoration.
+- Product feature visual: benefit-led headline, UI/diagram evidence, 2-3 supporting feature points.
+
 **Step 1** — calc all grid dimensions in one batch:
 
 ```
@@ -190,3 +198,4 @@ Key patterns in this example:
 - **One batch stock_photo** — 17 images in parallel, not 17 sequential calls
 - **Footer real content from skeleton** — simple enough to render once
 - **Total: 1 calc + 1 skeleton + 6 replace renders + 1 stock_photo + 2 describes + fixes = ~15 steps**
+- **Desktop hierarchy** — richer content is allowed, but the hero/focal region stays dominant and grid columns do not become visual noise

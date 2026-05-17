@@ -9,11 +9,46 @@ Classify the request before anything else:
 
 When in doubt: if the design fits one screen and is primarily one composition → Direct.
 
+## Skill mode selection
+
+After workflow selection, infer task mode, role priority, density, and safest treatment:
+
+- Social post: Visual Art Director + Typographer + Spacing Master + Color Master. Fast hook, large headline, one message.
+- Infographic: Information Designer + Layout Architect + Icon Director + Typographer. Clear chunks, scan flow, no text stuffing.
+- Ad creative: Visual Art Director + Composition Director + Color Master + Typographer. Attention, emotional pull, clear CTA.
+- Quote card: Typographer + Spacing Master + Color Master + Composition Director. Type is the hero, elements are minimal.
+- Comparison chart: Layout Architect + Information Designer + Typographer + Icon Director. Paired reading flow and matching structures.
+- Educational carousel: Information Designer + Typographer + Spacing Master + Layout Architect. One idea per slide, mobile-safe type.
+- Poster: Visual Art Director + Composition Director + Typographer + Color Master. High impact, low text, strong visual mass.
+- Hero banner: Layout Architect + Visual Art Director + Typographer + Color Master. Headline and product/brand signal first.
+- UI section mockup: UX Visual Designer + Layout Architect + Spacing Master + Color Master. Component discipline and real hierarchy.
+- Product feature visual: UX Visual Designer + Information Designer + Layout Architect + Typographer. Feature and benefit are obvious.
+- Storytelling visual: Visual Art Director + Composition Director + Color Master + Information Designer. Mood and narrative anchor.
+- Dashboard/data visual: UX Visual Designer + Information Designer + Layout Architect + Typographer. Usable cards, labels, charts.
+- Announcement graphic: Typographer + Visual Art Director + Layout Architect + Color Master. Date/time/event cannot get buried.
+- Mobile-focused composition: Typographer + Spacing Master + Information Designer + Banana Pro Render Specialist. Few blocks, large type, wide safe area.
+- Desktop-focused composition: Layout Architect + Composition Director + Information Designer + Visual Art Director. Richer grid, still clear hierarchy.
+
+## Aesthetic lens selection
+
+Choose one lens unless the user gives a stronger style reference. The lens changes mood, palette, treatment, and emphasis; it must not break readability or layout rules.
+
+- Clean editorial: whitespace, clear type, restrained color, premium slide/article feel.
+- Premium minimal: few elements, wide spacing, subtle shadow, no loud effects.
+- Friendly community: softer radius, warm/pastel accents, approachable icons/illustration.
+- AI-native tech: clean modern blue/violet/navy, light grid/card/glow only when useful.
+- Educational clarity: high comprehension, strong chunking, supportive icons, good contrast.
+- Bold campaign: large headline, strong contrast, controlled attention.
+- Product/startup modern: clean cards, UI-like structure, landing/product deck feel.
+- Soft emotional storytelling: gentle palette, mood-led visual, few words, quiet space.
+- UI/dashboard-like: disciplined components, tables/cards/charts, low decoration.
+- High-contrast poster: strong typography, few words, large visual mass.
+
 ## Direct workflow (single artboard)
 
 Render **real content from the start** — never gray placeholders.
 
-1. **Plan** (text only) — list the blocks and rough dimensions.
+1. **Plan** (text only) — list task mode, aesthetic lens, density, focal map, blocks, and rough dimensions.
 2. `calc` — batch all dimension arithmetic.
 3. **Render real content** — render the artboard frame + first region with REAL text, colors, and icons, then 1–2 more `render` calls for the remaining regions. Every `<Text>` carries the real copy; every shape has a real `bg`/`color`. Split only to stay under 40 elements per call. Do NOT render a gray skeleton first.
 4. `describe` + `batch_update` — fix every error and warning.
@@ -33,13 +68,19 @@ Before the final summary the design is **NOT done** while any of these remain:
 
 Run a final `describe`; when the model can see images, also call `export_image` once on the root frame and look at it. If any placeholder or empty text remains → keep rendering real content. **Never hand back a wireframe** — only summarize when the canvas shows the finished design.
 
+## Design quality QA
+
+Before final summary, self-check: task type correct, skill mode suitable, aesthetic lens consistent, information density appropriate, structure intact, primary/secondary focal points clear, reading flow smooth, headline dominant but not oversized, typography readable, spacing rhythmic, negative space sufficient, visual weight balanced, color controlled, CTA visible when present, icons consistent, Banana Pro text-safe, not overdecorated, not generic AI-looking, and no existing render constraints broken.
+
+If this check fails, simplify before finalizing: reduce clutter, remove unnecessary elements, improve spacing, strengthen hierarchy, rebalance scale, increase safe area, quiet decorative layers, or re-render the weak region.
+
 ## Skeleton workflow (multi-section pages only)
 
 Use the phases below ONLY for a long multi-section page or a many-panel app screen. For a single artboard, use the Direct workflow above instead.
 
 ## Phase 1 — Plan (text only, no tools)
 
-Write a brief plan as numbered sections: what blocks, rough dimensions, layout approach. Example:
+Write a brief plan as numbered sections: task mode, aesthetic lens, focal map, what blocks, rough dimensions, layout approach. Example:
 
 > 1. NavBar 1440×56 dark, row
 > 2. Hero 1440×500 with image placeholder + overlay text

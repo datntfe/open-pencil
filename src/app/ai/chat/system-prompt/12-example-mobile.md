@@ -4,6 +4,13 @@ User prompt: "Mobile app. Figma like app with procreate style ui"
 
 This is a **mobile interface app** (390×844) — dark theme, floating panels, tool dock.
 
+Mobile-first compositions favor clarity over density: large type, 1-3 content blocks, wide safe area, short copy, clean backgrounds, and no tiny decorative details. Use these recipes for mobile/social artboards:
+
+- Social post: 1080×1350 or 390×844, one strong headline, one support line, one visual anchor, 32-48 outer margin.
+- Quote card: quote as the main shape, generous whitespace, small attribution, no more than one accent color.
+- Educational card: one lesson per screen, 3-5 compact bullets/cards max, consistent icons, high contrast.
+- Ad creative: one offer, one CTA, one focal image/shape, brand/accent visible but not noisy.
+
 **Step 1** — calc + search_icons for all needed icons upfront.
 
 **Step 2** — Skeleton render:
@@ -70,10 +77,10 @@ This is a **mobile interface app** (390×844) — dark theme, floating panels, t
 ```jsx
 <Frame name="SampleDesign" w={280} h={400} flex="col" bg="#FFFFFF">
   <Frame w="fill" h={120} bg="#6C5CE7" flex="col" justify="end" p={16}>
-    <Text color="#FFFFFF" size={8} weight="bold" textCase="upper" letterSpacing={1}>
+    <Text color="#FFFFFF" size={10} weight="bold" textCase="upper" letterSpacing={1}>
       MOBILE APP
     </Text>
-    <Text color="#FFFFFFCC" size={6}>
+    <Text color="#FFFFFFCC" size={12}>
       Sample Design Preview
     </Text>
   </Frame>
@@ -154,3 +161,4 @@ Key patterns in this example:
 - **Procreate aesthetic**: `#2C2C2ECC` semi-transparent panels, `rounded={22}` pill shapes, `shadow` for depth
 - **Icons with explicit color** — `color="#FFFFFFCC"` or `color="#FFFFFF88"` for hierarchy
 - **3 renders** (skeleton → content A → content B) + **3 describes** + fix pass
+- **Mobile clarity** — readable labels, few competing blocks, wide safe area, and no text smaller than necessary

@@ -25,3 +25,15 @@ These are ALL available props. Nothing else exists.
 **Shapes:** points={N} (Star/Polygon), innerRadius={N} (Star). All shapes need `bg` or `stroke` — invisible without.
 
 **Identity:** name="string" for the layers panel.
+
+## Rendering priorities
+
+Banana Pro render stability outranks decoration. Prioritize in this order: content intent -> layout integrity -> information hierarchy -> typography readability -> spacing hierarchy -> color harmony -> component consistency -> visual polish -> decoration.
+
+For text-heavy designs: keep the background clean, use larger text, chunk content into a few strong groups, avoid dense gradients behind text, and reduce icon/detail count. For visual-heavy designs: choose one focal visual, keep copy short and strong, and make every supporting shape serve the message.
+
+For infographics: use clear cards/sections/icons, paired reading for comparisons, logical grouping, and no more typography levels than needed. For UI-like graphics: components need real padding, consistent radius, logical borders/shadows, readable labels, and no fake controls that do not help comprehension.
+
+Color should guide the eye, not decorate everything. Use one primary color, one accent, and one support/neutral family when possible. Accent color is for key information, CTA, or active state; background stays quieter than content. Gradients must be subtle and controlled.
+
+When writing render JSX, describe/build from macro to micro: purpose -> layout -> hierarchy -> text -> cards/components -> color -> polish -> prohibited. Avoid contradictory style instructions such as minimal + many details, flat + 3D, or premium + heavy neon glow.
