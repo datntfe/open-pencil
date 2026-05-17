@@ -28,8 +28,20 @@ export function useTextEdit(canvasRef: Ref<HTMLCanvasElement | null>, store: Edi
     deleteText,
     resetBlink
   })
-  const { isComposing, onCompositionStart, onCompositionEnd, onInput, resetComposition } =
-    createTextCompositionHandlers({ textareaRef, getEditingNode, insertText, resetBlink })
+  const {
+    isComposing,
+    onCompositionStart,
+    onCompositionUpdate,
+    onCompositionEnd,
+    onInput,
+    resetComposition
+  } = createTextCompositionHandlers({
+    textareaRef,
+    getEditingNode,
+    insertText,
+    deleteText,
+    resetBlink
+  })
 
   const onKeyDown = createTextKeyDownHandler({
     store,
@@ -49,6 +61,7 @@ export function useTextEdit(canvasRef: Ref<HTMLCanvasElement | null>, store: Edi
 
   useEventListener(textareaRef, 'input', onInput)
   useEventListener(textareaRef, 'compositionstart', onCompositionStart)
+  useEventListener(textareaRef, 'compositionupdate', onCompositionUpdate)
   useEventListener(textareaRef, 'compositionend', onCompositionEnd)
   useEventListener(textareaRef, 'keydown', onKeyDown)
   useEventListener(canvasRef, 'mousedown', () =>

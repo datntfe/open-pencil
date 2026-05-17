@@ -32,6 +32,7 @@ type TextCompositionOptions = {
   textareaRef: ShallowRef<HTMLTextAreaElement | null>
   getEditingNode: () => SceneNode | null
   insertText: (text: string, node: SceneNode) => void
+  deleteText: (node: SceneNode, forward: boolean) => void
   resetBlink: () => void
 }
 
@@ -39,21 +40,56 @@ export function createTextCompositionHandlers({
   textareaRef,
   getEditingNode,
   insertText,
+  deleteText,
   resetBlink
 }: TextCompositionOptions) {
   let isComposing = false
+  // Length of the not-yet-committed text currently previewed on the canvas
+  // while an IME composition (e.g. Vietnamese Telex/VNI) is in progress.
+  let composingLength = 0
+
+  // Removes the live composition preview so it can be replaced or finalized.
+  function clearComposingPreview() {
+    for (let i = 0; i < composingLength; i++) {
+      const node = getEditingNode()
+      if (!node) break
+      deleteText(node, false)
+    }
+    composingLength = 0
+  }
 
   function onCompositionStart() {
     isComposing = true
+    composingLength = 0
+  }
+
+  // Fires on every IME keystroke — renders the in-progress composition live
+  // instead of leaving the canvas blank until compositionend.
+  function onCompositionUpdate(e: CompositionEvent) {
+    clearComposingPreview()
+    const data = e.data
+    if (!data) {
+      resetBlink()
+      return
+    }
+    const node = getEditingNode()
+    if (!node) return
+    insertText(data, node)
+    composingLength = data.length
+    resetBlink()
   }
 
   function onCompositionEnd(e: CompositionEvent) {
+    clearComposingPreview()
     isComposing = false
-    if (!e.data) return
+    if (textareaRef.value) textareaRef.value.value = ''
+    if (!e.data) {
+      resetBlink()
+      return
+    }
     const node = getEditingNode()
     if (!node) return
     insertText(e.data, node)
-    if (textareaRef.value) textareaRef.value.value = ''
     resetBlink()
   }
 
@@ -72,11 +108,13 @@ export function createTextCompositionHandlers({
 
   function resetComposition() {
     isComposing = false
+    composingLength = 0
   }
 
   return {
     isComposing: () => isComposing,
     onCompositionStart,
+    onCompositionUpdate,
     onCompositionEnd,
     onInput,
     resetComposition

@@ -142,7 +142,14 @@ export function useCanvasInput(
     autoLayoutPaddingEdit.value = null
   }
 
+  let lastDblClickHandledAt = 0
   function onDblClick(e: MouseEvent) {
+    // A double-click reaches here from two sources — the native `dblclick`
+    // event and the click-counter fallback in onMouseDown (the native event
+    // is unreliable on some setups). De-dupe so it is only handled once.
+    const now = performance.now()
+    if (now - lastDblClickHandledAt < 400) return
+    lastDblClickHandledAt = now
     if (startAutoLayoutPaddingEdit(e)) return
     onTextDblClick(e)
   }
@@ -159,6 +166,11 @@ export function useCanvasInput(
     const selectedIdsBeforeMouseDown = new Set(editor.state.selectedIds)
     const clickCount = recordClick(sx, sy)
     if (clickCount === 1) selectedIdsBeforeClickSequence.value = selectedIdsBeforeMouseDown
+    // Treat the 2nd (or later) rapid click as a double-click. The native
+    // `dblclick` event is unreliable on some setups, so this in-app click
+    // counter is the single source of double-click intent. onTextDblClick is
+    // a no-op once editing has started, so repeated rapid clicks are safe.
+    if (clickCount >= 2) onDblClick(e)
     handleToolMouseDown({
       event: e,
       cx,
