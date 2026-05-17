@@ -69,6 +69,7 @@ const BUNDLED_FONTS: Record<string, string> = {
 
 export class FontManager {
   private loadedFamilies = new Map<string, ArrayBuffer>()
+  private fontsChangedListeners = new Set<() => void>()
   private fontProvider: TypefaceFontProvider | null = null
   private localFonts: FontInfo[] | null = null
   private localFontAccessState: LocalFontAccessState = IS_BROWSER ? 'prompt' : 'unsupported'
@@ -262,6 +263,21 @@ export class FontManager {
   markLoaded(family: string, style: string, data: ArrayBuffer): void {
     this.loadedFamilies.set(`${family}|${style}`, data)
     this.registerFontInCanvasKit(family, data)
+    this.notifyFontsChanged()
+  }
+
+  /**
+   * Subscribe to font-load events — fired whenever a font's bytes become
+   * available. Returns an unsubscribe function. Used to refresh missing-font
+   * warnings and to repaint the canvas once an on-demand font has loaded.
+   */
+  onFontsChanged(listener: () => void): () => void {
+    this.fontsChangedListeners.add(listener)
+    return () => this.fontsChangedListeners.delete(listener)
+  }
+
+  private notifyFontsChanged(): void {
+    for (const listener of this.fontsChangedListeners) listener()
   }
 
   isLoaded(family: string): boolean {
@@ -489,6 +505,7 @@ export class FontManager {
     this.loadedFamilies.set(`${family}|${style}`, buffer)
     this.registerFontInCanvasKit(family, buffer)
     this.registerFontInBrowser(family, style, buffer)
+    this.notifyFontsChanged()
     return buffer
   }
 

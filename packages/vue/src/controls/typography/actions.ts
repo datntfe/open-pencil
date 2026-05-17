@@ -69,10 +69,11 @@ export function createTypographyActions({
   async function setFamily(family: string) {
     if (!node.value) return
     const { id, fontWeight } = node.value
-    // Apply the family first so the canvas updates immediately; the font then
-    // loads in the background and the text re-renders once it is ready.
+    // Apply the family first so the canvas reflects the choice immediately.
     editor.updateNodeWithUndo(id, { fontFamily: family }, 'Change font')
+    // Then load the font and repaint so the text re-renders with it.
     await doLoadFont(family, weightToStyle(fontWeight))
+    editor.requestRender()
   }
 
   async function setWeight(weight: number) {
@@ -81,6 +82,7 @@ export function createTypographyActions({
     const style = weightToStyle(weight)
     editor.updateNodeWithUndo(id, { fontWeight: weight }, 'Change font weight')
     await doLoadFont(fontFamily, style)
+    editor.requestRender()
   }
 
   function setAlign(align: TextAlign) {
