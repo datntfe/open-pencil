@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { parseColor } from '@open-pencil/core/color'
 import { PropertyListRoot, useFillControls, useOkHCL, useI18n } from '@open-pencil/vue'
 
 import FillPicker from '@/components/FillPicker.vue'
@@ -29,6 +30,20 @@ function updateFill(
     fillCtx.unbindVariable(activeNode.id, index)
   }
   update(index, fill)
+}
+
+// Commits a hex code typed directly into a solid fill's color field.
+function updateFillHex(
+  activeNode: SceneNode | null | undefined,
+  index: number,
+  fill: Fill,
+  event: Event,
+  update: (index: number, fill: Fill) => void
+) {
+  if (fill.type !== 'SOLID') return
+  const raw = (event.target as HTMLInputElement).value.trim()
+  const parsed = parseColor(raw.startsWith('#') ? raw : `#${raw}`)
+  updateFill(activeNode, index, { ...fill, color: { ...parsed, a: fill.color.a } }, update)
 }
 </script>
 
@@ -76,7 +91,21 @@ function updateFill(
           @update="updateFill(activeNode, i, $event, actions.update)"
         />
 
+        <input
+          v-if="fill.type === 'SOLID' && !(activeNode && fillCtx.getBoundVariable(activeNode.id, i))"
+          data-test-id="fill-hex-input"
+          class="min-w-0 flex-1 border-none bg-transparent font-mono text-xs text-surface uppercase outline-none"
+          :value="fillLabel(fill)"
+          maxlength="6"
+          spellcheck="false"
+          @change="updateFillHex(activeNode, i, fill, $event, actions.update)"
+          @keydown.enter="($event.target as HTMLInputElement).blur()"
+          @paste.stop
+          @copy.stop
+          @cut.stop
+        />
         <span
+          v-else
           class="min-w-0 flex-1 truncate font-mono text-xs"
           :class="
             activeNode && fillCtx.getBoundVariable(activeNode.id, i)
