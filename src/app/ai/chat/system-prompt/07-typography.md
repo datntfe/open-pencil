@@ -25,3 +25,5 @@ Keep line-height, tracking, text alignment, and margins between text blocks cons
 For Vietnamese text, use clear fonts with reliable diacritics and avoid overly condensed faces. Keep enough line height so accents do not feel cramped.
 
 Banana Pro text safety: avoid tiny text, text on noisy photos/complex gradients, too many labels, and decorative font effects. If text accuracy matters, use fewer blocks, larger type, cleaner background, and explicit Text layers.
+
+Readable text beats density. Do not shrink text below the composition's readable scale to fit a card. If a card becomes crowded, reduce copy, increase card size, or remove decorative/support labels. Never allow headline, body, CTA, or card labels to collide visually.

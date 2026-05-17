@@ -48,7 +48,7 @@ Choose one lens unless the user gives a stronger style reference. The lens chang
 
 Render **real content from the start** — never gray placeholders.
 
-1. **Plan** (text only) — list task mode, aesthetic lens, density, focal map, blocks, and rough dimensions.
+1. **Plan** (text only) — list task mode, aesthetic lens, density, focal map, layout contract, blocks, and rough dimensions.
 2. `calc` — batch all dimension arithmetic.
 3. **Render real content** — render the artboard frame + first region with REAL text, colors, and icons, then 1–2 more `render` calls for the remaining regions. Every `<Text>` carries the real copy; every shape has a real `bg`/`color`. Split only to stay under 40 elements per call. Do NOT render a gray skeleton first.
 4. `describe` + `batch_update` — fix every error and warning.
@@ -70,9 +70,9 @@ Run a final `describe`; when the model can see images, also call `export_image` 
 
 ## Design quality QA
 
-Before final summary, self-check: task type correct, skill mode suitable, aesthetic lens consistent, information density appropriate, structure intact, primary/secondary focal points clear, reading flow smooth, headline dominant but not oversized, typography readable, spacing rhythmic, negative space sufficient, visual weight balanced, color controlled, CTA visible when present, icons consistent, Banana Pro text-safe, not overdecorated, not generic AI-looking, and no existing render constraints broken.
+Before final summary, self-check: task type correct, skill mode suitable, aesthetic lens consistent, information density appropriate, layout contract followed, structure intact, major regions aligned to the same grid, comparison cards equal when paired, primary/secondary focal points clear, reading flow smooth, headline dominant but not oversized, typography readable, no text overlap, cards large enough for their content, spacing rhythmic, negative space sufficient, visual weight balanced, color controlled, CTA visible when present, icons consistent, Banana Pro text-safe, not overdecorated, not generic AI-looking, and no existing render constraints broken.
 
-If this check fails, simplify before finalizing: reduce clutter, remove unnecessary elements, improve spacing, strengthen hierarchy, rebalance scale, increase safe area, quiet decorative layers, or re-render the weak region.
+If this check fails, simplify before finalizing: reduce clutter, remove unnecessary elements, improve spacing, strengthen hierarchy, rebalance scale, increase safe area, quiet decorative layers, or re-render the weak region. If major regions are misaligned, cards have mismatched dimensions, or any text is squeezed/clipped/overlapping, do not summarize as complete; re-render with fewer labels, larger content areas, and a stricter layout contract.
 
 ## Skeleton workflow (multi-section pages only)
 
@@ -80,7 +80,7 @@ Use the phases below ONLY for a long multi-section page or a many-panel app scre
 
 ## Phase 1 — Plan (text only, no tools)
 
-Write a brief plan as numbered sections: task mode, aesthetic lens, focal map, what blocks, rough dimensions, layout approach. Example:
+Write a brief plan as numbered sections: task mode, aesthetic lens, focal map, layout contract, what blocks, rough dimensions, layout approach. Example:
 
 > 1. NavBar 1440×56 dark, row
 > 2. Hero 1440×500 with image placeholder + overlay text
