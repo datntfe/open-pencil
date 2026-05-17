@@ -56,10 +56,13 @@ async function getSystemFamilies(): Promise<string[]> {
       const fonts = await listFonts()
       return fonts.map((f) => f.family)
     }
-    // Browser: once Local Font Access is granted, re-query so system fonts
-    // reappear after a reload without revisiting Font settings. This never
-    // prompts — the permission is already granted.
-    if (localFontAccessState() === 'granted') {
+    // Browser: always pull in system fonts when the picker opens. If the
+    // browser permission is already granted this loads silently; if it has
+    // not been decided yet, the picker-open click is the user gesture that
+    // lets queryLocalFonts() show its one-time prompt. A prior denial is
+    // respected — we do not re-prompt.
+    const accessState = localFontAccessState()
+    if (accessState === 'granted' || accessState === 'prompt') {
       await requestLocalFontAccess()
     }
     // listFamilies() = catalog ∪ granted local fonts; subtract the catalog to

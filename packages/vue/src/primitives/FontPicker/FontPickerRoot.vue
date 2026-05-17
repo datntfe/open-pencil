@@ -42,13 +42,12 @@ function focusSearchInput() {
   })
 }
 
-const { searchTerm, open, filteredGroups, fontCount, loading, accessState, requestAccess, select } =
-  useFontPicker({
-    modelValue,
-    listFonts,
-    localFontAccess,
-    onSelect: (family) => emit('select', family)
-  })
+const { searchTerm, open, filteredGroups, fontCount, select } = useFontPicker({
+  modelValue,
+  listFonts,
+  localFontAccess,
+  onSelect: (family) => emit('select', family)
+})
 </script>
 
 <template>
@@ -125,16 +124,6 @@ const { searchTerm, open, filteredGroups, fontCount, loading, accessState, reque
             <p>{{ emptyFontsText ?? 'No fonts available.' }}</p>
             <p v-if="emptyFontsHint" class="mt-1">{{ emptyFontsHint }}</p>
           </div>
-
-          <button
-            v-if="accessState === 'prompt'"
-            type="button"
-            :class="ui?.emptyAction"
-            :disabled="loading"
-            @click="requestAccess"
-          >
-            {{ loading ? 'Loading…' : 'Add system fonts' }}
-          </button>
         </ComboboxViewport>
       </ComboboxContent>
     </ComboboxPortal>
