@@ -70,6 +70,7 @@ export class SkiaRenderer {
   fontMgr: FontMgr | null = null
   fontProvider: TypefaceFontProvider | null = null
   fontsLoaded = false
+  fontsChangedUnsubscribe: (() => void) | null = null
   imageCache = new Map<string, CKImage>()
   vectorPathCache = new Map<string, Path[]>()
   vectorStrokePathCache = new Map<string, Path[]>()

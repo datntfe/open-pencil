@@ -1,9 +1,25 @@
 import type { SkiaRenderer } from '#core/canvas/renderer'
 import { fontManager } from '#core/text/fonts'
 
+function destroyRendererFonts(r: SkiaRenderer): void {
+  r.fontsChangedUnsubscribe?.()
+  r.fontsChangedUnsubscribe = null
+  r.textFont?.delete()
+  r.labelFont?.delete()
+  r.sizeFont?.delete()
+  r.fontMgr?.delete()
+  const fontProvider = r.fontProvider
+  fontProvider?.delete()
+  r.fontProvider = null
+  r.fontsLoaded = false
+  fontManager.detachProvider(fontProvider)
+}
+
 export function destroyRenderer(r: SkiaRenderer): void {
   if (r.destroyed) return
   r.destroyed = true
+
+  destroyRendererFonts(r)
 
   for (const img of r.imageCache.values()) img.delete()
   r.imageCache.clear()
@@ -26,15 +42,6 @@ export function destroyRenderer(r: SkiaRenderer): void {
   r.auxFill.delete()
   r.auxStroke.delete()
   r.opacityPaint.delete()
-  r.textFont?.delete()
-  r.labelFont?.delete()
-  r.sizeFont?.delete()
-  r.fontMgr?.delete()
-  const fontProvider = r.fontProvider
-  fontProvider?.delete()
-  r.fontProvider = null
-  r.fontsLoaded = false
-  fontManager.detachProvider(fontProvider)
   r.rulerBgPaint.delete()
   r.rulerTickPaint.delete()
   r.rulerTextPaint.delete()

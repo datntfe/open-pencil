@@ -24,6 +24,13 @@ export async function loadFonts(
 
   fontManager.attachProvider(r.ck, r.fontProvider)
 
+  // Drop cached pictures whenever a font's bytes arrive so text nodes that
+  // rendered with a fallback (or not at all) rebuild against the real font.
+  r.fontsChangedUnsubscribe?.()
+  r.fontsChangedUnsubscribe = fontManager.onFontsChanged(() => {
+    if (!r.isDestroyed()) r.invalidateAllPictures()
+  })
+
   const fontData = await fontManager.loadFont(DEFAULT_FONT_FAMILY, 'Regular')
   if (r.isDestroyed()) return
   if (fontData) {
