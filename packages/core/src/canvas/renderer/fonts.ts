@@ -19,7 +19,12 @@ export async function loadFonts(
   onFallbackFontsLoaded?: () => void
 ): Promise<void> {
   if (r.isDestroyed()) return
-  r.fontProvider?.delete()
+  if (r.fontProvider) {
+    // Detach the old provider before deleting it so it never lingers in the
+    // font manager's provider set as a dangling (deleted) reference.
+    fontManager.detachProvider(r.fontProvider)
+    r.fontProvider.delete()
+  }
   r.fontProvider = r.ck.TypefaceFontProvider.Make()
 
   fontManager.attachProvider(r.ck, r.fontProvider)

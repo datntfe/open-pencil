@@ -70,7 +70,10 @@ const BUNDLED_FONTS: Record<string, string> = {
 export class FontManager {
   private loadedFamilies = new Map<string, ArrayBuffer>()
   private fontsChangedListeners = new Set<() => void>()
-  private fontProvider: TypefaceFontProvider | null = null
+  // Every attached canvas surface has its own provider (the editor renders the
+  // scene and overlay layers on separate surfaces). A font must be registered
+  // into ALL of them, not just the last one attached.
+  private fontProviders = new Set<TypefaceFontProvider>()
   private localFonts: FontInfo[] | null = null
   private localFontAccessState: LocalFontAccessState = IS_BROWSER ? 'prompt' : 'unsupported'
   private downloadedFontCache: DownloadedFontCache | null = null
@@ -84,19 +87,22 @@ export class FontManager {
   private localFontStats = { rawCount: 0, uniqueFamilies: 0 }
 
   attachProvider(_canvasKit: CanvasKit, provider: TypefaceFontProvider): void {
-    this.fontProvider = provider
+    this.fontProviders.add(provider)
+    // Mirror every already-loaded font into the newly attached provider so a
+    // second surface starts fully in sync with what is already loaded.
     for (const [cacheKey, data] of this.loadedFamilies) {
       const family = cacheKey.slice(0, cacheKey.indexOf('|'))
-      this.registerFontInCanvasKit(family, data)
+      this.registerFontIntoProvider(provider, family, data)
     }
   }
 
   detachProvider(provider?: TypefaceFontProvider | null): void {
-    if (!provider || this.fontProvider === provider) this.fontProvider = null
+    if (provider) this.fontProviders.delete(provider)
   }
 
   provider(): TypefaceFontProvider | null {
-    return this.fontProvider
+    for (const provider of this.fontProviders) return provider
+    return null
   }
 
   localAccessState(): LocalFontAccessState {
@@ -510,16 +516,28 @@ export class FontManager {
   }
 
   private registerFontInCanvasKit(family: string, data: ArrayBuffer): boolean {
-    if (!this.fontProvider) {
+    if (this.fontProviders.size === 0) {
       console.warn(
         `[fonts] "${family}" loaded but no CanvasKit provider is attached — ` +
           `the canvas will fall back to a default font.`
       )
       return false
     }
+    let registered = false
+    for (const provider of this.fontProviders) {
+      if (this.registerFontIntoProvider(provider, family, data)) registered = true
+    }
+    return registered
+  }
+
+  private registerFontIntoProvider(
+    provider: TypefaceFontProvider,
+    family: string,
+    data: ArrayBuffer
+  ): boolean {
     if (data.byteLength < 4) return false
     try {
-      this.fontProvider.registerFont(data, family)
+      provider.registerFont(data, family)
       return true
     } catch (e) {
       console.warn(`[fonts] CanvasKit rejected font "${family}":`, e)

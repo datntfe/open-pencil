@@ -9,10 +9,10 @@ function destroyRendererFonts(r: SkiaRenderer): void {
   r.sizeFont?.delete()
   r.fontMgr?.delete()
   const fontProvider = r.fontProvider
+  fontManager.detachProvider(fontProvider)
   fontProvider?.delete()
   r.fontProvider = null
   r.fontsLoaded = false
-  fontManager.detachProvider(fontProvider)
 }
 
 export function destroyRenderer(r: SkiaRenderer): void {
