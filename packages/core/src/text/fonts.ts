@@ -510,11 +510,19 @@ export class FontManager {
   }
 
   private registerFontInCanvasKit(family: string, data: ArrayBuffer): boolean {
-    if (!this.fontProvider || data.byteLength < 4) return false
+    if (!this.fontProvider) {
+      console.warn(
+        `[fonts] "${family}" loaded but no CanvasKit provider is attached — ` +
+          `the canvas will fall back to a default font.`
+      )
+      return false
+    }
+    if (data.byteLength < 4) return false
     try {
       this.fontProvider.registerFont(data, family)
       return true
-    } catch {
+    } catch (e) {
+      console.warn(`[fonts] CanvasKit rejected font "${family}":`, e)
       return false
     }
   }
