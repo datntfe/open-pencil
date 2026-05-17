@@ -9,6 +9,7 @@ import {
   ComboboxItemIndicator,
   ComboboxPortal,
   ComboboxRoot,
+  ComboboxTrigger,
   ComboboxVirtualizer,
   ComboboxViewport,
   type AcceptableValue
@@ -64,11 +65,13 @@ const rowText = (row: FontPickerRow) => (row.kind === 'font' ? row.family : '')
     "
   >
     <ComboboxAnchor as-child>
-      <slot name="trigger" :value="modelValue" :open="open">
-        <button :class="ui?.trigger">
-          <span class="truncate">{{ modelValue }}</span>
-        </button>
-      </slot>
+      <ComboboxTrigger as-child>
+        <slot name="trigger" :value="modelValue" :open="open">
+          <button :class="ui?.trigger">
+            <span class="truncate">{{ modelValue }}</span>
+          </button>
+        </slot>
+      </ComboboxTrigger>
     </ComboboxAnchor>
 
     <ComboboxPortal>
