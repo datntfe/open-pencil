@@ -1,11 +1,12 @@
 import { computed, ref } from 'vue'
 
-import type { LocalFontAccessState } from '@open-pencil/core/text'
+import type { LocalFontAccessState, LocalFontDiagnostics } from '@open-pencil/core/text'
 
 import {
   clearDownloadedFontCache,
   downloadedFontCacheSummary,
   localFontAccessState,
+  localFontDiagnostics,
   predownloadFallbackFonts,
   requestLocalFontAccess
 } from '@/app/editor/fonts'
@@ -20,6 +21,7 @@ export interface FontSettingsActions {
   clearDownloadedFontCache: () => Promise<void>
   downloadedFontCacheSummary: () => Promise<FontCacheSummary>
   localFontAccessState: () => LocalFontAccessState
+  localFontDiagnostics: () => LocalFontDiagnostics
   predownloadFallbackFonts: () => Promise<unknown>
   requestLocalFontAccess: () => Promise<string[]>
 }
@@ -30,6 +32,7 @@ const defaultActions: FontSettingsActions = {
   clearDownloadedFontCache,
   downloadedFontCacheSummary,
   localFontAccessState,
+  localFontDiagnostics,
   predownloadFallbackFonts,
   requestLocalFontAccess
 }
@@ -39,6 +42,7 @@ export function useFontSettings(actions: FontSettingsActions = defaultActions) {
   const cacheByteLength = ref(0)
   const cacheUpdatedAt = ref<number | null>(null)
   const accessState = ref(actions.localFontAccessState())
+  const diagnostics = ref(actions.localFontDiagnostics())
   const busyAction = ref<FontSettingsBusyAction | null>(null)
   const status = ref('')
 
@@ -71,6 +75,7 @@ export function useFontSettings(actions: FontSettingsActions = defaultActions) {
       cacheByteLength.value = summary.byteLength
       cacheUpdatedAt.value = summary.updatedAt
       accessState.value = actions.localFontAccessState()
+      diagnostics.value = actions.localFontDiagnostics()
     } finally {
       if (busyAction.value === 'refresh') busyAction.value = null
     }
@@ -82,10 +87,12 @@ export function useFontSettings(actions: FontSettingsActions = defaultActions) {
     try {
       await actions.requestLocalFontAccess()
       accessState.value = actions.localFontAccessState()
-      status.value = 'Local font access enabled.'
+      diagnostics.value = actions.localFontDiagnostics()
+      status.value = 'System fonts added as an optional source.'
     } catch {
       accessState.value = actions.localFontAccessState()
-      status.value = 'Local font access was not granted.'
+      diagnostics.value = actions.localFontDiagnostics()
+      status.value = 'System font access was not granted — curated web fonts are still available.'
     } finally {
       busyAction.value = null
     }
@@ -122,6 +129,7 @@ export function useFontSettings(actions: FontSettingsActions = defaultActions) {
   return {
     accessState,
     accessStateLabel,
+    diagnostics,
     busyAction,
     canRequestLocalFonts,
     cacheCount,

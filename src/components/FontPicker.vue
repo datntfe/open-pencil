@@ -4,9 +4,10 @@ import { FontPickerRoot } from '@open-pencil/vue'
 
 import { useSelectUI } from '@/components/ui/select'
 import { usePopoverUI } from '@/components/ui/popover'
-import { listFamilies, localFontAccessState, requestLocalFontAccess } from '@/app/editor/fonts'
+import { localFontAccessState, requestLocalFontAccess } from '@/app/editor/fonts'
+import { getFontGroups } from '@/app/editor/fonts/registry'
 
-import type { FontPickerUi } from '@open-pencil/vue'
+import type { FontPickerUi, FontPickerEntry } from '@open-pencil/vue'
 
 const modelValue = defineModel<string>({ required: true })
 const emit = defineEmits<{ select: [family: string] }>()
@@ -23,15 +24,27 @@ const ui = computed<FontPickerUi>(() => ({
   trigger: selectCls.trigger,
   content: cls.content,
   item: selectCls.item,
+  header: 'select-none px-2 pt-2 pb-1 text-[10px] font-medium uppercase tracking-wide text-muted',
   search:
     'w-full border-b border-border bg-transparent px-2 py-1 text-xs text-surface outline-none placeholder:text-muted',
   empty: 'px-2 py-3 text-center text-xs text-muted',
-  emptyAction: 'mt-2 rounded bg-accent px-2 py-1 text-xs font-medium text-white disabled:opacity-50'
+  emptyAction: 'm-2 rounded border border-border px-2 py-1 text-xs text-muted disabled:opacity-50'
 }))
+
+/** Flattens the app Font Registry into grouped picker entries. */
+async function listFonts(): Promise<FontPickerEntry[]> {
+  const groups = await getFontGroups()
+  return groups.flatMap((group) =>
+    group.fonts.map((font) => ({ family: font.family, group: group.label }))
+  )
+}
 
 const localFontAccess = {
   state: localFontAccessState,
-  load: requestLocalFontAccess
+  load: async (): Promise<FontPickerEntry[]> => {
+    await requestLocalFontAccess()
+    return listFonts()
+  }
 }
 </script>
 
@@ -39,10 +52,10 @@ const localFontAccess = {
   <FontPickerRoot
     v-model="modelValue"
     data-test-id="font-picker-root"
-    :list-families="listFamilies"
+    :list-fonts="listFonts"
     :local-font-access="localFontAccess"
     :ui="ui"
-    empty-fonts-hint="Use the desktop app or Chrome/Edge to access system fonts."
+    empty-fonts-hint="Curated web fonts load on demand — system fonts are optional."
     @select="emit('select', $event)"
   >
     <template #trigger>

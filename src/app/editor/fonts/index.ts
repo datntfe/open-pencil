@@ -1,4 +1,9 @@
-import { fontManager, styleToWeight, type LocalFontAccessState } from '@open-pencil/core/text'
+import {
+  fontManager,
+  styleToWeight,
+  type LocalFontAccessState,
+  type LocalFontDiagnostics
+} from '@open-pencil/core/text'
 
 import {
   clearDownloadedFontCache as clearTauriDownloadedFontCache,
@@ -54,6 +59,11 @@ export function localFontAccessState(): LocalFontAccessState {
   return isTauri() ? 'granted' : fontManager.localAccessState()
 }
 
+/** Diagnostics for the optional Local Font Access source — see Font settings. */
+export function localFontDiagnostics(): LocalFontDiagnostics {
+  return fontManager.localFontDiagnostics()
+}
+
 export async function requestLocalFontAccess(): Promise<string[]> {
   if (isTauri()) return listFamilies()
   await fontManager.requestLocalFontAccess()
@@ -99,6 +109,25 @@ export async function listFonts(): Promise<TauriFontFamily[]> {
     return getTauriFonts()
   }
   return []
+}
+
+/**
+ * Weights (100–900) the family supports. Used to hide unavailable weights from
+ * the typography panel. Returns `[]` when unknown — the caller then shows the
+ * full weight scale.
+ */
+export async function listWeights(family: string): Promise<number[]> {
+  configureTauriFontCache()
+  if (isTauri()) {
+    const fonts = await getTauriFonts()
+    const entry = fonts.find((f) => f.family === family)
+    if (entry && entry.styles.length > 0) {
+      return [...new Set(entry.styles.map((style) => styleToWeight(style)))].sort((a, b) => a - b)
+    }
+    // Not an installed family (e.g. a curated Google font) — ask the manager.
+    return fontManager.availableWeights(family)
+  }
+  return fontManager.availableWeights(family)
 }
 
 export async function loadFont(family: string, style = 'Regular'): Promise<ArrayBuffer | null> {

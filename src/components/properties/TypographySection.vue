@@ -9,11 +9,11 @@ import VariableScrubInput from '@/components/properties/VariableScrubInput.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
 import Tip from '@/components/ui/Tip.vue'
 import { useSectionUI } from '@/components/ui/section'
-import { loadFont } from '@/app/editor/fonts'
+import { listWeights, loadFont } from '@/app/editor/fonts'
 
 const { panels } = useI18n()
 const sectionCls = useSectionUI()
-const fontLoader = { load: loadFont }
+const fontLoader = { load: loadFont, listWeights }
 </script>
 
 <template>
@@ -47,7 +47,7 @@ const fontLoader = { load: loadFont }
       <div class="mb-1.5 flex gap-1.5">
         <AppSelect
           :model-value="ctx.node.value.fontWeight"
-          :options="ctx.weights"
+          :options="ctx.weights.value"
           @update:model-value="ctx.actions.setWeight(+$event)"
         />
         <VariableScrubInput

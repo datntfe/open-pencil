@@ -52,7 +52,6 @@ export function createTypographyState(editor: Editor) {
 type TypographyActionOptions = {
   editor: Editor
   node: ComputedRef<SceneNode | null>
-  currentWeightLabel: ComputedRef<string>
   activeFormatting: ComputedRef<string[]>
   options: UseTypographyOptions
 }
@@ -60,7 +59,6 @@ type TypographyActionOptions = {
 export function createTypographyActions({
   editor,
   node,
-  currentWeightLabel,
   activeFormatting,
   options
 }: TypographyActionOptions) {
@@ -68,10 +66,40 @@ export function createTypographyActions({
     await options.fontLoader?.load(family, style)
   }
 
+  /**
+   * Picks the nearest weight the family supports, so switching to a font that
+   * lacks the current weight snaps to a real one instead of leaving the node
+   * on a weight no longer offered in the panel.
+   */
+  async function resolveAvailableWeight(family: string, current: number): Promise<number> {
+    const listWeights = options.fontLoader?.listWeights
+    if (!listWeights) return current
+    let available: number[]
+    try {
+      available = await listWeights(family)
+    } catch {
+      return current
+    }
+    if (available.length === 0 || available.includes(current)) return current
+    return available.reduce((best, w) =>
+      Math.abs(w - current) < Math.abs(best - current) ? w : best
+    )
+  }
+
   async function setFamily(family: string) {
-    if (!node.value) return
-    await doLoadFont(family, currentWeightLabel.value)
-    editor.updateNodeWithUndo(node.value.id, { fontFamily: family }, 'Change font')
+    // Capture the target node up front: the awaits below may outlast the
+    // current selection, but the font change still belongs to this node.
+    const target = node.value
+    if (!target) return
+    const weight = await resolveAvailableWeight(family, target.fontWeight)
+    await doLoadFont(family, weightToStyle(weight))
+    editor.updateNodeWithUndo(
+      target.id,
+      weight === target.fontWeight
+        ? { fontFamily: family }
+        : { fontFamily: family, fontWeight: weight },
+      'Change font'
+    )
   }
 
   async function setWeight(weight: number) {

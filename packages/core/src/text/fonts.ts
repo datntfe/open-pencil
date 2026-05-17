@@ -1,9 +1,25 @@
 import type { CanvasKit, TypefaceFontProvider } from 'canvaskit-wasm'
 
 import { DEFAULT_FONT_FAMILY, IS_BROWSER, GOOGLE_FONTS_API_KEY } from '#core/constants'
+
+import { CATALOG_FAMILIES } from '#core/text/font-catalog'
+import {
+  isVariableFont,
+  normalizeFontFamily,
+  pickFontStyle,
+  styleToVariant,
+  styleToWeight,
+  uniqueSortedWeights,
+  variantToWeight,
+  weightToStyle
+} from '#core/text/font-style'
 import type { SceneGraph } from '#core/scene-graph'
 import { fontFallbackEntry } from '#core/text/fallbacks'
 import type { FontFallbackScript } from '#core/text/fallbacks'
+
+// Re-export the stateless helpers so `@open-pencil/core/text` (and importers of
+// this module) keep their existing API surface after the font-style split.
+export * from '#core/text/font-style'
 
 export interface FontInfo {
   family: string
@@ -13,6 +29,28 @@ export interface FontInfo {
 }
 
 export type LocalFontAccessState = 'unsupported' | 'prompt' | 'granted' | 'denied'
+
+/**
+ * Snapshot of the optional Local Font Access source — for the diagnostics
+ * shown in Font settings. The curated catalog is always available regardless
+ * of these numbers; system fonts are a bonus, never a requirement.
+ */
+export interface LocalFontDiagnostics {
+  /** Whether the browser exposes `window.queryLocalFonts`. */
+  apiSupported: boolean
+  /** Current permission state. */
+  permission: LocalFontAccessState
+  /** Raw entries returned by the last `queryLocalFonts()` call. */
+  rawCount: number
+  /** Distinct families after deduplication. */
+  uniqueFamilies: number
+  /** Variable fonts skipped during enumeration — always 0; they are no longer filtered out. */
+  variableSkipped: number
+  /** Curated catalog fonts that are always offered. */
+  catalogCount: number
+  /** Total families visible in the picker (catalog ∪ granted system fonts). */
+  pickerTotal: number
+}
 
 export interface DownloadedFontCache {
   read(family: string, style: string): Promise<ArrayBuffer | null>
@@ -29,71 +67,6 @@ const BUNDLED_FONTS: Record<string, string> = {
   'Noto Naskh Arabic|Regular': '/NotoNaskhArabic-Regular.ttf'
 }
 
-export const FONT_WEIGHT_NAMES: Record<number, string> = {
-  100: 'Thin',
-  200: 'Extra Light',
-  300: 'Light',
-  400: 'Regular',
-  500: 'Medium',
-  600: 'Semi Bold',
-  700: 'Bold',
-  800: 'Extra Bold',
-  900: 'Black'
-}
-
-export function normalizeFontFamily(family: string): string {
-  return family.replace(/\s+(Variable|\d+(?:pt|px|em))$/i, '')
-}
-
-export function styleToVariant(style: string): string {
-  const weight = styleToWeight(style)
-  const italic = style.toLowerCase().includes('italic')
-  if (weight === 400 && !italic) return 'regular'
-  if (weight === 400 && italic) return 'italic'
-  return italic ? `${weight}italic` : `${weight}`
-}
-
-export function isVariableFont(data: ArrayBuffer): boolean {
-  if (data.byteLength < 12) return false
-  const view = new DataView(data)
-  const numTables = view.getUint16(4)
-  for (let i = 0; i < numTables && 12 + i * 16 + 4 <= data.byteLength; i++) {
-    const tag = String.fromCharCode(
-      view.getUint8(12 + i * 16),
-      view.getUint8(12 + i * 16 + 1),
-      view.getUint8(12 + i * 16 + 2),
-      view.getUint8(12 + i * 16 + 3)
-    )
-    if (tag === 'fvar') return true
-  }
-  return false
-}
-
-export function styleToWeight(style: string): number {
-  const s = style.toLowerCase().replace(/[\s-_]/g, '')
-  if (s.includes('thin') || s.includes('hairline')) return 100
-  if (s.includes('extralight') || s.includes('ultralight')) return 200
-  if (s.includes('light')) return 300
-  if (s.includes('medium')) return 500
-  if (s.includes('semibold') || s.includes('demibold')) return 600
-  if (s.includes('extrabold') || s.includes('ultrabold')) return 800
-  if (s.includes('black') || s.includes('heavy')) return 900
-  if (s.includes('bold')) return 700
-  return 400
-}
-
-export function weightToStyle(weight: number, italic = false): string {
-  const rounded = Math.round(weight / 100) * 100
-  const label = (FONT_WEIGHT_NAMES[rounded] ?? 'Regular').replace(/ /g, '')
-  return italic ? `${label} Italic` : label
-}
-
-export function weightToFigmaStyle(weight: number, italic = false): string {
-  const rounded = Math.round(weight / 100) * 100
-  const label = FONT_WEIGHT_NAMES[rounded] ?? 'Regular'
-  return italic ? `${label} Italic` : label
-}
-
 export class FontManager {
   private loadedFamilies = new Map<string, ArrayBuffer>()
   private fontProvider: TypefaceFontProvider | null = null
@@ -107,6 +80,7 @@ export class FontManager {
   private cjkFallbackPromise: Promise<string[]> | null = null
   private arabicFallbackFamilies: string[] = []
   private arabicFallbackPromise: Promise<string[]> | null = null
+  private localFontStats = { rawCount: 0, uniqueFamilies: 0 }
 
   attachProvider(_canvasKit: CanvasKit, provider: TypefaceFontProvider): void {
     this.fontProvider = provider
@@ -126,6 +100,20 @@ export class FontManager {
 
   localAccessState(): LocalFontAccessState {
     return this.localFontAccessState
+  }
+
+  /** Diagnostics for the optional Local Font Access source. */
+  localFontDiagnostics(): LocalFontDiagnostics {
+    const localFamilies = this.localFonts?.map((f) => f.family) ?? []
+    return {
+      apiSupported: IS_BROWSER && typeof window.queryLocalFonts === 'function',
+      permission: this.localFontAccessState,
+      rawCount: this.localFontStats.rawCount,
+      uniqueFamilies: this.localFontStats.uniqueFamilies,
+      variableSkipped: 0,
+      catalogCount: CATALOG_FAMILIES.length,
+      pickerTotal: new Set([...CATALOG_FAMILIES, ...localFamilies]).size
+    }
   }
 
   setDownloadedFontCache(cache: DownloadedFontCache | null): void {
@@ -165,17 +153,51 @@ export class FontManager {
       }
       this.localFonts = result
       this.localFontAccessState = 'granted'
+      this.localFontStats = {
+        rawCount: fonts.length,
+        uniqueFamilies: new Set(result.map((r) => r.family)).size
+      }
       return result
     } catch {
       this.localFonts = []
       this.localFontAccessState = 'denied'
+      this.localFontStats = { rawCount: 0, uniqueFamilies: 0 }
       return []
     }
   }
 
   async listFamilies(): Promise<string[]> {
-    const fonts = this.localFonts ?? (await this.requestLocalFontAccess())
-    return [...new Set(fonts.map((f) => f.family))].sort()
+    // The curated catalog is always offered so the picker is usable even
+    // before (or without) Local Font Access. Local fonts are merged in only
+    // once already granted — never trigger the permission prompt from here.
+    const local = this.localFonts?.map((f) => f.family) ?? []
+    return [...new Set([...CATALOG_FAMILIES, ...local])].sort()
+  }
+
+  /**
+   * Weights (100–900) the family actually provides — derived from granted
+   * local fonts, else the Google Fonts catalog. Returns `[]` when unknown, so
+   * callers can fall back to the full weight scale.
+   *
+   * Note: a variable local font may report only its default named instance
+   * here; its full `wght` axis range is not introspected.
+   */
+  async availableWeights(family: string): Promise<number[]> {
+    const local =
+      this.localFonts?.filter(
+        (f) => f.family === family || normalizeFontFamily(f.family) === family
+      ) ?? []
+    if (local.length > 0) {
+      return uniqueSortedWeights(local.map((f) => styleToWeight(f.style)))
+    }
+
+    try {
+      const files = await this.fetchGoogleFontFiles(family)
+      if (files) return uniqueSortedWeights(Object.keys(files).map(variantToWeight))
+    } catch (e) {
+      console.warn(`Could not resolve available weights for "${family}":`, e)
+    }
+    return []
   }
 
   async fetchBundledFont(url: string): Promise<ArrayBuffer | null> {
@@ -205,7 +227,7 @@ export class FontManager {
     const downloadedBuffer = await this.loadCachedFont(family, style)
     if (downloadedBuffer) return downloadedBuffer
 
-    const localBuffer = await this.findLocalFont(family, style)
+    const localBuffer = await this.findLocalFont(family, style, { allowVariable: true })
     if (localBuffer) return this.registerAndCache(family, style, localBuffer)
 
     if (typeof fetch !== 'undefined') {
@@ -445,8 +467,10 @@ export class FontManager {
 
       let match: (typeof fonts)[number] | undefined
       for (const f of families) {
-        match = style ? fonts.find((x) => x.family === f && x.style === style) : undefined
-        match ??= fonts.find((x) => x.family === f)
+        match = pickFontStyle(
+          fonts.filter((x) => x.family === f),
+          style
+        )
         if (match) break
       }
 
@@ -480,10 +504,12 @@ export class FontManager {
 
   private registerFontInBrowser(family: string, style: string, data: ArrayBuffer) {
     if (!IS_BROWSER) return
-    const weight = styleToWeight(style)
     const italic = style.toLowerCase().includes('italic') ? 'italic' : 'normal'
+    // A variable font file spans a weight range; pinning it to one weight makes
+    // the DOM ignore it for every other weight.
+    const weight = isVariableFont(data) ? '100 900' : String(styleToWeight(style))
     const face = new FontFace(family, data, {
-      weight: String(weight),
+      weight,
       style: italic
     })
     face

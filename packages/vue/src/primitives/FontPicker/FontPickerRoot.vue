@@ -16,11 +16,11 @@ import {
 
 import { useFontPicker, type FontAccessController } from '#vue/primitives/FontPicker/useFontPicker'
 
-import type { FontPickerUi } from '#vue/primitives/FontPicker/types'
+import type { FontPickerEntry, FontPickerRow, FontPickerUi } from '#vue/primitives/FontPicker/types'
 
-const { listFamilies, localFontAccess, ui, emptySearchText, emptyFontsText, emptyFontsHint } =
+const { listFonts, localFontAccess, ui, emptySearchText, emptyFontsText, emptyFontsHint } =
   defineProps<{
-    listFamilies: () => Promise<string[]>
+    listFonts: () => Promise<FontPickerEntry[]>
     localFontAccess?: FontAccessController
     ui?: FontPickerUi
     emptySearchText?: string
@@ -41,12 +41,15 @@ function focusSearchInput() {
   })
 }
 
-const { searchTerm, open, filtered, loading, accessState, requestAccess, select } = useFontPicker({
-  modelValue,
-  listFamilies,
-  localFontAccess,
-  onSelect: (family) => emit('select', family)
-})
+const { searchTerm, open, rows, fontCount, loading, accessState, requestAccess, select } =
+  useFontPicker({
+    modelValue,
+    listFonts,
+    localFontAccess,
+    onSelect: (family) => emit('select', family)
+  })
+
+const rowText = (row: FontPickerRow) => (row.kind === 'font' ? row.family : '')
 </script>
 
 <template>
@@ -93,51 +96,57 @@ const { searchTerm, open, filtered, loading, accessState, requestAccess, select 
         <ComboboxViewport :class="ui?.viewport ?? 'max-h-72 overflow-y-auto'">
           <ComboboxVirtualizer
             v-slot="{ option }"
-            :options="filtered"
-            :text-content="(family: string) => family"
-            :estimate-size="36"
+            :options="rows"
+            :text-content="rowText"
+            :estimate-size="34"
           >
-            <slot name="item" :family="option" :selected="option === modelValue">
+            <div
+              v-if="option.kind === 'header'"
+              :class="
+                ui?.header ??
+                'select-none px-2 pt-2 pb-1 text-[10px] font-medium uppercase tracking-wide text-muted'
+              "
+            >
+              {{ option.label }}
+            </div>
+            <slot
+              v-else
+              name="item"
+              :family="option.family"
+              :selected="option.family === modelValue"
+            >
               <ComboboxItem
-                :value="option"
+                :value="option.family"
                 :class="ui?.item"
-                :style="{ fontFamily: `'${option}', sans-serif` }"
+                :style="{ fontFamily: `'${option.family}', sans-serif` }"
               >
                 <ComboboxItemIndicator>
-                  <slot name="indicator" :selected="option === modelValue" />
+                  <slot name="indicator" :selected="option.family === modelValue" />
                 </ComboboxItemIndicator>
-                <span class="truncate">{{ option }}</span>
+                <span class="truncate">{{ option.family }}</span>
               </ComboboxItem>
             </slot>
           </ComboboxVirtualizer>
 
-          <div v-if="filtered.length === 0 && searchTerm" :class="ui?.empty">
+          <div v-if="fontCount === 0 && searchTerm" :class="ui?.empty">
             {{ emptySearchText ?? 'No fonts found' }}
           </div>
-          <div v-else-if="filtered.length === 0" :class="ui?.empty">
+          <div v-else-if="fontCount === 0" :class="ui?.empty">
             <div>
-              <p v-if="accessState === 'prompt'">
-                Allow local font access to browse installed fonts.
-              </p>
-              <p v-else-if="accessState === 'denied'">
-                Local font access is blocked for this site.
-              </p>
-              <p v-else-if="accessState === 'unsupported'">
-                Local fonts are not available in this browser.
-              </p>
-              <p v-else>{{ emptyFontsText ?? 'No local fonts available.' }}</p>
+              <p>{{ emptyFontsText ?? 'No fonts available.' }}</p>
               <p v-if="emptyFontsHint" class="mt-1">{{ emptyFontsHint }}</p>
-              <button
-                v-if="accessState === 'prompt'"
-                type="button"
-                :class="ui?.emptyAction"
-                :disabled="loading"
-                @click="requestAccess"
-              >
-                {{ loading ? 'Loading…' : 'Allow local fonts' }}
-              </button>
             </div>
           </div>
+
+          <button
+            v-if="accessState === 'prompt'"
+            type="button"
+            :class="ui?.emptyAction"
+            :disabled="loading"
+            @click="requestAccess"
+          >
+            {{ loading ? 'Loading…' : 'Add system fonts' }}
+          </button>
         </ComboboxViewport>
       </ComboboxContent>
     </ComboboxPortal>

@@ -74,7 +74,21 @@ export async function prepareForExport(
   setTextMeasurer((node, maxWidth) => r.measureTextNode(node, maxWidth))
 
   const fontKeys = fontManager.collectFontKeys(graph, nodeIds)
-  await Promise.all(fontKeys.map(([family, style]) => fontManager.loadFont(family, style)))
+  const fontResults = await Promise.all(
+    fontKeys.map(async ([family, style]) => ({
+      family,
+      style,
+      ok: (await fontManager.loadFont(family, style)) !== null
+    }))
+  )
+  // Surface load failures instead of silently falling back to a different font.
+  const failed = fontResults.filter((f) => !f.ok)
+  if (failed.length > 0) {
+    console.warn(
+      `Export: ${failed.length} font(s) could not be loaded and will render with a fallback — ` +
+        failed.map((f) => `"${f.family}" ${f.style}`).join(', ')
+    )
+  }
 
   computeAllLayouts(graph, pageId)
 

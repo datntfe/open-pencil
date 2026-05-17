@@ -1,11 +1,14 @@
 import { useFilter } from 'reka-ui'
 import { computed, ref, watch } from 'vue'
 
+import type { FontPickerEntry, FontPickerRow } from '#vue/primitives/FontPicker/types'
+
 export type FontAccessState = 'unsupported' | 'prompt' | 'granted' | 'denied'
 
 export interface FontAccessController {
   state: () => FontAccessState
-  load: () => Promise<string[]>
+  /** Grants Local Font Access, then returns the refreshed entry list. */
+  load: () => Promise<FontPickerEntry[]>
 }
 
 /**
@@ -14,8 +17,8 @@ export interface FontAccessController {
 export interface UseFontPickerOptions {
   /** Writable model for the selected font family. */
   modelValue: { value: string }
-  /** Async source for available font families. */
-  listFamilies: () => Promise<string[]>
+  /** Async source for the picker's font entries (already grouped + ordered). */
+  listFonts: () => Promise<FontPickerEntry[]>
   /** Host-provided local-font permission controller. */
   localFontAccess?: FontAccessController
   /** Optional callback fired after a family is selected. */
@@ -23,26 +26,50 @@ export interface UseFontPickerOptions {
 }
 
 /**
- * Returns searchable font-picker state and selection helpers.
+ * Returns searchable, grouped font-picker state and selection helpers.
+ *
+ * The font source is the app Font Registry — the curated catalog is always
+ * present, so the picker is never empty even without Local Font Access.
  */
 export function useFontPicker(options: UseFontPickerOptions) {
-  const families = ref<string[]>([])
+  const entries = ref<FontPickerEntry[]>([])
   const searchTerm = ref('')
   const open = ref(false)
   const loading = ref(false)
   const accessState = ref<FontAccessState>(options.localFontAccess?.state() ?? 'granted')
 
   const { contains } = useFilter({ sensitivity: 'base' })
-  const filtered = computed(() => {
-    if (!searchTerm.value) return families.value
-    return families.value.filter((family) => contains(family, searchTerm.value))
+
+  /** Entries after the search filter. */
+  const matched = computed(() => {
+    if (!searchTerm.value) return entries.value
+    return entries.value.filter((entry) => contains(entry.family, searchTerm.value))
   })
 
-  async function loadFamilies() {
-    if (families.value.length > 0 || loading.value) return
+  /** Rows to render: a section header precedes each new group. */
+  const rows = computed<FontPickerRow[]>(() => {
+    const out: FontPickerRow[] = []
+    let lastGroup: string | undefined
+    for (const entry of matched.value) {
+      if (entry.group && entry.group !== lastGroup) {
+        lastGroup = entry.group
+        out.push({ kind: 'header', key: `h:${entry.group}`, label: entry.group })
+      }
+      out.push({ kind: 'font', key: `f:${entry.family}`, family: entry.family })
+    }
+    return out
+  })
+
+  /** Number of fonts (excluding headers) currently shown. */
+  const fontCount = computed(() => matched.value.length)
+
+  async function loadEntries() {
+    if (loading.value) return
     loading.value = true
     try {
-      families.value = await options.listFamilies()
+      // Re-fetch on every open so newly granted system fonts and load-state
+      // changes are reflected. The source never triggers a permission prompt.
+      entries.value = await options.listFonts()
       accessState.value = options.localFontAccess?.state() ?? accessState.value
     } finally {
       loading.value = false
@@ -53,16 +80,14 @@ export function useFontPicker(options: UseFontPickerOptions) {
     if (!isOpen) return
     searchTerm.value = ''
     accessState.value = options.localFontAccess?.state() ?? accessState.value
-    if (accessState.value !== 'prompt') {
-      await loadFamilies()
-    }
+    await loadEntries()
   })
 
   async function requestAccess() {
     if (!options.localFontAccess || loading.value) return
     loading.value = true
     try {
-      families.value = await options.localFontAccess.load()
+      entries.value = await options.localFontAccess.load()
       accessState.value = options.localFontAccess.state()
     } finally {
       loading.value = false
@@ -76,10 +101,11 @@ export function useFontPicker(options: UseFontPickerOptions) {
   }
 
   return {
-    families,
+    entries,
+    rows,
+    fontCount,
     searchTerm,
     open,
-    filtered,
     loading,
     accessState,
     requestAccess,

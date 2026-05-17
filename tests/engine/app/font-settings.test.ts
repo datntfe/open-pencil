@@ -14,6 +14,17 @@ function actions(overrides: Partial<FontSettingsActions> = {}): FontSettingsActi
     localFontAccessState() {
       return accessState
     },
+    localFontDiagnostics() {
+      return {
+        apiSupported: false,
+        permission: accessState,
+        rawCount: 0,
+        uniqueFamilies: 0,
+        variableSkipped: 0,
+        catalogCount: 0,
+        pickerTotal: 0
+      }
+    },
     async predownloadFallbackFonts() {
       return undefined
     },
@@ -47,7 +58,7 @@ describe('useFontSettings', () => {
     expect(settings.accessState.value).toBe('granted')
     expect(settings.accessStateLabel.value).toBe('Enabled')
     expect(settings.canRequestLocalFonts.value).toBe(false)
-    expect(settings.status.value).toBe('Local font access enabled.')
+    expect(settings.status.value).toBe('System fonts added as an optional source.')
     expect(settings.busyAction.value).toBeNull()
   })
 
@@ -106,7 +117,9 @@ describe('useFontSettings', () => {
 
     await settings.requestAccess()
 
-    expect(settings.status.value).toBe('Local font access was not granted.')
+    expect(settings.status.value).toBe(
+      'System font access was not granted — curated web fonts are still available.'
+    )
     expect(settings.busyAction.value).toBeNull()
   })
 })

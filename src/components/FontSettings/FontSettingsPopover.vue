@@ -27,6 +27,7 @@ const primaryButton = useButtonUI({
 const {
   accessState,
   accessStateLabel,
+  diagnostics,
   busyAction,
   cacheCount,
   cacheSize,
@@ -73,18 +74,23 @@ onMounted(() => {
             <div>
               <h3 class="text-[11px] font-semibold text-surface">Font settings</h3>
               <p class="mt-0.5 text-[10px] leading-relaxed text-muted">
-                Access system fonts, predownload fallback packs, and manage cached downloads.
+                Design fonts come from a curated web-font catalog and are always available. This
+                panel adds <em>optional</em> system fonts and CJK / Arabic fallback packs.
               </p>
             </div>
           </div>
 
           <div class="grid gap-1.5 rounded border border-border bg-input/40 p-2 text-[10px]">
             <div class="flex justify-between gap-3 text-muted">
-              <span>Local fonts</span>
+              <span>Design fonts (web)</span>
+              <span class="text-surface">{{ diagnostics.catalogCount }} always available</span>
+            </div>
+            <div class="flex justify-between gap-3 text-muted">
+              <span>System fonts</span>
               <span class="text-surface">{{ accessStateLabel }}</span>
             </div>
             <div class="flex justify-between gap-3 text-muted">
-              <span>Downloaded cache</span>
+              <span>Fallback cache</span>
               <span class="text-surface">{{ cacheCount }} fonts · {{ cacheSize }}</span>
             </div>
             <div class="flex justify-between gap-3 text-muted">
@@ -96,12 +102,12 @@ onMounted(() => {
           <div class="space-y-1.5">
             <div class="grid grid-cols-[1fr_auto] gap-2 rounded border border-border p-2">
               <div>
-                <p class="text-[10px] font-medium text-surface">System font access</p>
+                <p class="text-[10px] font-medium text-surface">System font access (optional)</p>
                 <p class="mt-0.5 text-[10px] leading-relaxed text-muted">
                   {{
                     accessState === 'granted'
-                      ? 'System fonts are available.'
-                      : 'Allow browser font access when system fonts are missing.'
+                      ? 'Locally-installed fonts are added to the picker as an extra source.'
+                      : 'Optionally add locally-installed fonts. The editor never depends on them.'
                   }}
                 </p>
               </div>
@@ -120,7 +126,8 @@ onMounted(() => {
               <div>
                 <p class="text-[10px] font-medium text-surface">Fallback packs</p>
                 <p class="mt-0.5 text-[10px] leading-relaxed text-muted">
-                  Download CJK and Arabic fallbacks before opening files that need them.
+                  Glyph coverage for CJK &amp; Arabic text — not a source of design fonts.
+                  Predownload before opening files that need them.
                 </p>
               </div>
               <button
@@ -155,6 +162,40 @@ onMounted(() => {
               Clear cache
             </button>
           </div>
+
+          <details class="rounded border border-border text-[10px]">
+            <summary class="cursor-pointer px-2 py-1.5 text-muted">
+              Local font diagnostics
+            </summary>
+            <div class="grid gap-1 border-t border-border px-2 py-1.5 text-muted">
+              <div class="flex justify-between gap-3">
+                <span>queryLocalFonts API</span>
+                <span class="text-surface">
+                  {{ diagnostics.apiSupported ? 'Supported' : 'Unavailable' }}
+                </span>
+              </div>
+              <div class="flex justify-between gap-3">
+                <span>Permission</span>
+                <span class="text-surface">{{ diagnostics.permission }}</span>
+              </div>
+              <div class="flex justify-between gap-3">
+                <span>Fonts returned</span>
+                <span class="text-surface">{{ diagnostics.rawCount }}</span>
+              </div>
+              <div class="flex justify-between gap-3">
+                <span>Unique families</span>
+                <span class="text-surface">{{ diagnostics.uniqueFamilies }}</span>
+              </div>
+              <div class="flex justify-between gap-3">
+                <span>Variable skipped</span>
+                <span class="text-surface">{{ diagnostics.variableSkipped }}</span>
+              </div>
+              <div class="flex justify-between gap-3">
+                <span>Fonts in picker</span>
+                <span class="text-surface">{{ diagnostics.pickerTotal }}</span>
+              </div>
+            </div>
+          </details>
 
           <p
             v-if="status"
